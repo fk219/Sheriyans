@@ -1,6 +1,5 @@
-const app = require('/home/user/sheriyans/backend/Day 88 - REST API/src/app.js')
+const app = require("./src/app");
 
-
-app.listen(3000, ()=>{
-    console.log(`Your Server is Running at http://localhost:3000`)
-})
+app.listen(4000, () => {
+  console.log(`Your Server is Running at http://localhost:4000`);
+});
