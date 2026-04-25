@@ -35,9 +35,8 @@ app.delete("/notes/:index", (req, res) => {
 });
 
 // PATCH API ---------
-
 app.patch("/notes/:index", (req, res) => {
-  notes[req.params.index] = req.body.description;
+  notes[req.params.index].description = req.body.description;
 
   res.status(200).json({
     message: "Description Updated Successfully!",
