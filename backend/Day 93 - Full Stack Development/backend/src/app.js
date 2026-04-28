@@ -1,8 +1,10 @@
 const express = require("express");
 const notesModel = require("./models/notes.model");
+const cors = require("cors");
 
 const app = express();
 app.use(express.json());
+app.use(cors());
 
 // API CHECK
 app.get("/", (req, res) => {

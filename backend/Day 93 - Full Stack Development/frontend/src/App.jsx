@@ -1,30 +1,11 @@
-require("dotenv").config();
-
 import { useState } from "react";
 import axios from "axios";
 
 function App() {
-  const [notes, setnotes] = useState([
-    {
-      title: "Test Title 01",
-      description: "Test Description",
-    },
-    {
-      title: "Test Title 02",
-      description: "Test Description",
-    },
-    {
-      title: "Test Title 03",
-      description: "Test Description",
-    },
-    {
-      title: "Test Title 04",
-      description: "Test Description",
-    },
-  ]);
+  const [notes, setNotes] = useState([]);
 
-  axios.get("https://nx5kyy-3001.csb.app").then((res) => {
-    console.log(res.data);
+  axios.get("https://nx5kyy-3001.csb.app/api/notes").then((res) => {
+    setNotes(res.data);
   });
 
   return (
