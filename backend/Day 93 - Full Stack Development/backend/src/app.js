@@ -30,11 +30,9 @@ app.post("/api/notes", async (req, res) => {
 app.get("/api/notes", async (req, res) => {
   const notes = await notesModel.find();
 
-  res.send(notes);
-
   res.status(200).json({
     message: "All Notes Fetched Successsfully",
-    notes,
+    notes: notes,
   });
 });
 
