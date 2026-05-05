@@ -1,20 +1,29 @@
-const express = require('express')
-const userModel = require('../models/user.model.js')
+const express = require("express");
+const userModel = require("../models/user.model.js");
 
-const authRouter = express.Router()
+const authRouter = express.Router();
 
-authRouter.post('/register', async (req, res) => {
-    const {name, email, password} = req.body
+authRouter.post("/register", async (req, res) => {
+  const { name, email, password } = req.body;
 
-    const user = await userModel.create({
-        name, email, password
-    })
+  const isUserAlreadyExist = userModel.findOne({ email });
 
-    res.status(201).json({
-        message: "User Registered Successfully!!",
-        user
-    })
-})
+  if (isUserAlreadyExist) {
+    return res.status(400).json({
+      message: "User Already Exist with that Email",
+    });
+  }
 
+  const user = await userModel.create({
+    name,
+    email,
+    password,
+  });
 
-module.exports = authRouter
+  res.status(201).json({
+    message: "User Registered Successfully!!",
+    user,
+  });
+});
+
+module.exports = authRouter;
