@@ -1,15 +1,18 @@
 const express = require("express");
+const path = require("path");
+
 const notesModel = require("./models/notes.model");
 const cors = require("cors");
 
 const app = express();
-app.use(express.json());
 app.use(cors());
+app.use(express.json());
+app.use(express.static("./public"));
 
 // API CHECK
-app.get("/", (req, res) => {
-  res.send("API is Running all Fine!!");
-});
+// app.get("/", (req, res) => {
+//   res.send("API is Running all Fine!!");
+// });
 
 // CREATE NOTE API
 app.post("/api/notes", async (req, res) => {
@@ -57,6 +60,11 @@ app.patch("/api/notes/:id", async (req, res) => {
   res.status(200).json({
     message: "Note Updated Successfully",
   });
+});
+
+// Wild Card Route
+app.use("*name", (req, res) => {
+  res.sendFile(path.join(__dirname, "..", "/public/index.html"));
 });
 
 module.exports = app;
