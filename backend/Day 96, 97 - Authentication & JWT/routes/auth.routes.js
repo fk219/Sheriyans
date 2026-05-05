@@ -1,5 +1,5 @@
 const express = require('express')
-const userModel = require('./models/user.model')
+const userModel = require('../models/user.model.js')
 
 const authRouter = express.Router()
 
@@ -15,5 +15,6 @@ authRouter.post('/register', async (req, res) => {
         user
     })
 })
+
 
 module.exports = authRouter
