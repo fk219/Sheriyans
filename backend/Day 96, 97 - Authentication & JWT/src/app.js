@@ -13,4 +13,10 @@ app.get("/", (req, res) => {
 
 app.use("/api/auth", authRouter);
 
+app.use("*name", (req, res) => {
+  res.status(404).json({
+    message: "Endpoint Galat hai waps check kar",
+  });
+});
+
 module.exports = app;
