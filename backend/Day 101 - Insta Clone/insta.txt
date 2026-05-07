@@ -1,6 +1,6 @@
 ==>AUTHENTICATION
--register
--login
+-register (1. User ka data Save karna DB me | 2. Token User ke Browser me Save krna)
+-login ()
 -logout(token blacklistig)
 -OTP based AUTHENTICATION
 
