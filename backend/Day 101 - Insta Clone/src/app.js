@@ -7,7 +7,7 @@ app.use(cookieParser())
 
 const authRouter = require("../routes/auth.route")
 
-app.post('/', () => {
+app.get('/', (req, res) => {
     res.send("All API's are working!")
 })
 

@@ -5,24 +5,8 @@ const jwt= require('jsonwebtoken')
 
 const authRouter = express.Router()
 
-authRouter.post('/regitser', async (req, res) => {
+authRouter.post('/register', async (req, res) => {
     const {username, email, password, bio, profileImage} = req.body;
-
-    // const isUserExistsByEmail = await userModel.findOne({email})
-
-    // if(!isUserExistsByEmail){
-    //     res.status(409).json({
-    //         message: "User Already Exists with Same Email!" 
-    //     })
-    // }
-
-    // const isUserExistsByUsername = await userModel.findOne({username})
-
-    // if(!isUserExistsByUsername){
-    //     res.status(409).json({
-    //         message: "User Already Exists with Same Username!"
-    //     })
-    // }
 
     const isUserAlreadyExists = await userModel.findOne({
         $or:[
@@ -32,14 +16,14 @@ authRouter.post('/regitser', async (req, res) => {
     }) 
 
     if(isUserAlreadyExists){
-        res.status(409).json({
-            message: "User Already Exists with Same Email or Username!" + (isUserAlreadyExists.email === email ? "Email Aready Exists" : "Username Already Exists!")
+        return res.status(409).json({
+            message: "User Already Exists with Same Email or Username! " + (isUserAlreadyExists.email === email ? "Email Already Exists" : "Username Already Exists!")
         })
     }
 
     const hashedPassword = crypto.createHash('md5').update(password).digest('hex')
 
-    const user = userModel.create({
+    const user = await userModel.create({
         username,
         email,
         password: hashedPassword,
@@ -59,16 +43,16 @@ authRouter.post('/regitser', async (req, res) => {
         message: "User Registered Successfully",
         user: {
             email: user.email,
-            username: (await user).username,
-            bio: (await user).bio,
-            profileImage: user.profileImage
+            username: user.username,
+            bio: user.bio,
+            profileImage: user.profile_image
         }
     })
 
 })
 
-authRouter.post('login', async (req, res) => {
-
+authRouter.post('/login', async (req, res) => {
+    // Login logic will go here
 })
 
 
