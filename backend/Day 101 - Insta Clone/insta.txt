@@ -1,0 +1,15 @@
+==>AUTHENTICATION
+-register
+-login
+-logout(token blacklistig)
+-OTP based AUTHENTICATION
+
+==>POST
+-Create
+-Like
+-Save
+-Can See Feed
+
+==>USER
+-Followers
+-Followings
