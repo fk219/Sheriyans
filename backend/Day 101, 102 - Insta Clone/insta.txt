@@ -1,6 +1,6 @@
 ==>AUTHENTICATION
 -register (1. User ka data Save karna DB me | 2. Token User ke Browser me Save krna)
--login ()
+-login (1. Check is the User Exists | 2. If yes Save Token to Browser)
 -logout(token blacklistig)
 -OTP based AUTHENTICATION
 
@@ -13,3 +13,13 @@
 ==>USER
 -Followers
 -Followings
+
+
+
+How POST will Look Like:
+{
+    captions: String,
+    img_url: String,
+    user: user._id
+    createdAt: Date
+}
