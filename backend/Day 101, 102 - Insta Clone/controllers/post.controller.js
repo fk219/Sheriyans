@@ -38,7 +38,9 @@ const createPostController = async (req, res) => {
             fileName: req.file.originalname
         })
 
-        res.send(file)
+        res.send({
+            url: file.url
+        })
 }
 
 module.exports = {
