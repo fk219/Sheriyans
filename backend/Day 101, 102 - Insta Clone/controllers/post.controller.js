@@ -1,27 +1,3 @@
-// const postModel = require("../models/post.model")
-// const imageKit = require("@imagekit/nodejs")
-
-
-// const imagekitInstance = new imageKit({
-//     privateKey: process.env.IMAGEKIT_PRIVATE_KEY,
-//     urlEndpoint: process.env.IMAGEKIT_URL_ENDPOINT
-// })
-
-// const createPostController = async (req, res) => {
-//     console.log(req.body, req.file)
-    
-//     const file = await imagekitInstance.files.upload({
-//         file: await toFile(Buffer.from(req.file.buffer), 'file'),
-//         fileName: req.file.originalname
-//     })
-
-//     res.send(file)
-// }
-
-// module.exports = {
-//     createPostController
-// }
-
 const postModel = require("../models/post.model")
 const ImageKit = require("@imagekit/nodejs")
 const { toFile } = require("@imagekit/nodejs")
@@ -39,7 +15,7 @@ const createPostController = async (req, res) => {
         })
 
         res.send({
-            url: file.url
+            file: file
         })
 }
 
