@@ -19,7 +19,8 @@ const userSchema = new mongoose.Schema({
     profile_image: {
         type: String,
         default: "https://ik.imagekit.io/fk219/default_profile.png"
-    }
+    },
+    
 })
 
 const userModel = mongoose.model("users", userSchema)
