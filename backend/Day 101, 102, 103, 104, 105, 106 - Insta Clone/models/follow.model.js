@@ -14,7 +14,7 @@ const followSchema = new mongoose.Schema({
         // required: [true, "Followee is Required!"]
     }
 }, {
-    timestamp: true
+    timestamps: true
 })
 
 const followModel = mongoose.model("Follows", followSchema)
