@@ -1,0 +1,1 @@
+BACKEND_URL=https://nx5kyy-3001.csb.app/api/notes
