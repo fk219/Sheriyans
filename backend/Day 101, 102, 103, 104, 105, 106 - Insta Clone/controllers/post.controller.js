@@ -1,4 +1,6 @@
 const postModel = require("../models/post.model")
+const likeModel = require("../models/like.model")
+
 const identifyUser = require("../middleware/auth.middleware")
 
 const ImageKit = require("@imagekit/nodejs/index.js")
@@ -65,9 +67,33 @@ const getPostDetailsController = async (req, res) => {
     });
 };
 
+const likePostController = async (req, res) => {
+    const user = req.user.username;
+    const postId = req.params.postId;
+
+    // Does Post the user trying to like Exists?
+    const doesPostExist = await postModel.findById(postId)
+
+    if(!doesPostExist){
+        return res.status(404).json({
+            message: "The Post You are trying to Like Does Not Exists"
+        })
+    }
+
+    const likedPost = await likeModel.create({
+        post: postId,
+        user: user
+    })
+
+    return res.status(200).json({
+        message: "Post Liked Successfully",
+        likedPost
+    })
+}
 
 module.exports = {
     createPostController, 
     getPostController,
-    getPostDetailsController
+    getPostDetailsController,
+    likePostController
 }
