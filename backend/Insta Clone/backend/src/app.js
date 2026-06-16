@@ -9,7 +9,10 @@ const userRouter = require("../routes/user.route")
 const app = express()
 app.use(express.json())
 app.use(cookieParser())
-app.use(cors())
+app.use(cors({
+    credentials: true,
+    origin: ["https://insta-clone-frontend-n518.onrender.com", "http://localhost:5173"]
+}))
 
 app.get('/', (req, res) => {
     res.send("All API's are working!")
