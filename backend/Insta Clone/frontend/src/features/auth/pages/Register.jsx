@@ -14,7 +14,7 @@ const Register = () => {
   const handleSubmit = async (e) => {
     e.preventDefault()
 
-    axios.post('http://localhost:5000/api/auth/register', {
+    axios.post('https://insta-clone-backend-n518.onrender.com/api/auth/register', {
       username,
       email,
       password
@@ -23,7 +23,7 @@ const Register = () => {
     .catch(err => console.log(err))
   }
 
-  // return (
+  return (
     <main>
         <div className="form-container">
             <h1>Register</h1>
@@ -31,20 +31,20 @@ const Register = () => {
                 <input
                   onInput={(e) => setEmail(e.target.value)}
                   type="email" 
-                  name="email" placeholder='Email' 
-                  value={email}
+                  name="email" 
+                  placeholder='Email'
                 />
                 <input
                   onInput={(e) => setUsername(e.target.value)} 
                   type="text" 
-                  name="username" placeholder='Username' 
-                  value={username}
+                  name="username" 
+                  placeholder='Username'
                 />
                 <input 
                   onInput={(e) => setPassword(e.target.value)}
                   type="password" 
-                  name="password" placeholder='Password' 
-                  value={password}
+                  name="password" 
+                  placeholder='Password'
                 />
                 <button type="submit">Register</button>
             </form>
