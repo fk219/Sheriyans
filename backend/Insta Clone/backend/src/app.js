@@ -9,9 +9,13 @@ const userRouter = require("../routes/user.route")
 const app = express()
 app.use(express.json())
 app.use(cookieParser())
+
 app.use(cors({
-    credentials: true,
-    origin: ["https://insta-clone-frontend-n518.onrender.com", "http://localhost:5173"]
+  origin: [
+    "http://localhost:5173",
+    "https://scaling-waddle-q5v7p6gvxj73wrx-5173.app.github.dev"
+  ],
+  credentials: true,
 }))
 
 app.get('/', (req, res) => {
