@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom'
 import '../styles/form.scss'
 import axios from 'axios'
 
+// https://insta-clone-backend-n518.onrender.com/
+
 const Register = () => {
   
   const [username, setUsername]= useState('')
@@ -21,7 +23,7 @@ const Register = () => {
     .catch(err => console.log(err))
   }
 
-  return (
+  // return (
     <main>
         <div className="form-container">
             <h1>Register</h1>
