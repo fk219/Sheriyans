@@ -1,15 +1,33 @@
-const axios = require('axios')
+import axios from "axios"
 
+const api = axios.create({
+    baseURL: "https://insta-clone-backend-n518.onrender.com/api/auth",
+    withCredentails: true
+})
 
-const register = () => {
-
+export const register = async (username, email, password) => {
     try{
-        
-    }catch(err)
+        const response = await axios.post('/register', {
+            username, 
+            email,
+            password
+        })
 
+        return response.data
+    }catch(err){
+        throw err
+    }
 }
 
 
-const login = () => {
-
+export const login = (username, email, password) => {
+    try{
+        const response = axios.post("/login", {
+            username, 
+            email,
+            password
+        })
+    }catch(err){
+        throw err
+    }
 }
