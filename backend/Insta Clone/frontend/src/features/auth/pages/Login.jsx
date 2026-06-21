@@ -1,25 +1,29 @@
 import React, {useState} from 'react'
 import '../styles/form.scss'
-import { Link } from 'react-router-dom'
-import axios from 'axios'
+import { Link, useNavigate } from 'react-router-dom'
 
-// https://insta-clone-backend-n518.onrender.com/
+import { useAuth } from '../hooks/useAuth.js'
 
 const Login = () => {
 
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
-  
+  const navigate = useNavigate()
+
+  const {handleLogin, loading} = useAuth()
+
+  if(loading){
+    return <div>Loading...</div>
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
-    axios.post('https://insta-clone-backend-n518.onrender.com/api/auth/login', {
-      username,
-      password
-    }, {
-      credentials: true
+   
+    handleLogin(username, password)
+    .then(res => {
+      console.log(res)
+      navigate('/')
     })
-    .then(res => console.log(res))
-    .catch(err => console.log(err))
   }
   
   return (

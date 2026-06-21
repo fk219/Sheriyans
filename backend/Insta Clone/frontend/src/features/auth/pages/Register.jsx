@@ -14,15 +14,6 @@ const Register = () => {
   const handleSubmit = async (e) => {
     e.preventDefault()
 
-    axios.post('https://insta-clone-backend-n518.onrender.com/api/auth/register', {
-      username,
-      email,
-      password
-    }, {
-      withCredentials: true
-    })
-    .then(res => console.log(res))
-    .catch(err => console.log(err))
   }
 
   return (
