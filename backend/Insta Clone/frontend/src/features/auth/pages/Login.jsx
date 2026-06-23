@@ -1,52 +1,59 @@
-import React, {useState} from 'react'
-import '../styles/form.scss'
-import { Link, useNavigate } from 'react-router-dom'
+import React, { useState } from 'react'
+import {Link} from 'react-router-dom'
+import '../style/form.scss'
+import { useAuth } from "../hooks/useAuth"
+import {useNavigate} from 'react-router-dom'
 
-import { useAuth } from '../hooks/useAuth.js'
 
 const Login = () => {
 
-  const [username, setUsername] = useState('')
-  const [password, setPassword] = useState('')
   const navigate = useNavigate()
+  const {user, loading, handleLogin} = useAuth()
 
-  const {handleLogin, loading} = useAuth()
-
-  if(loading){
-    return <div>Loading...</div>
-  }
+  const[username, setUsername] = useState()
+  const[password, setPassword] = useState()
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-   
-    handleLogin(username, password)
-    .then(res => {
-      console.log(res)
-      navigate('/')
-    })
+
+    await handleLogin(username, password)
+    console.log("LogggedIn from FE")
+
+    navigate('/')
+
+  }
+
+  if(loading){
+    return(
+      <main>
+        <h1>Loading....</h1>
+      </main>
+    )
   }
   
   return (
     <main>
-        <div className="form-container">
-            <h1>Login</h1>
-            <form className="form" onSubmit={handleSubmit}>
-                <input 
-                  type="text" 
-                  name="username" 
-                  placeholder='Username'
-                  onChange={(e) => setUsername(e.target.value)}
-                />
-                <input 
-                  type="password" 
-                  name="password" 
-                  placeholder='Password'
-                  onChange={(e) => setPassword(e.target.value)}
-                />
-                <button type="submit">Login</button>
-            </form>
-            <p>Don't have an account? <Link className="toggleAuthForm" to="/register">Register</Link></p>
-        </div>
+      <div className="form-container">
+        <h1>Login</h1>
+        <form onSubmit={handleSubmit}>
+          <input
+            onInput={(e) => setUsername(e.target.value)} 
+            type="text" 
+            name="username" 
+            id="username" 
+            placeholder="Enter Username"
+            />
+          <input 
+            onInput={(e) => setPassword(e.target.value)} 
+            type="password" 
+            name="password"
+            id="password"
+            placeholder='Enter Password'
+          />
+          <button className='button primary-button'>Login</button>
+        </form>
+        <p>Dont have an account ? <Link to={"/register"}>Create One.</Link></p>
+      </div>
     </main>
   )
 }

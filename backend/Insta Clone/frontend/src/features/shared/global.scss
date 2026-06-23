@@ -1,0 +1,20 @@
+@use "../auth/style/button.scss";
+
+*{
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+}
+
+html, body, #root{
+    height: 100%;
+    width: 100%;
+    background-color: black;
+    color: whitesmoke;
+    font-family: Arial, sans-serif;
+}
+
+a{
+    color: rgb(144, 196, 3);
+    text-decoration: none;
+}
