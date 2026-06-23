@@ -97,7 +97,8 @@ const getFeedController = async(req, res) => {
     const posts = await postModel.find()
 
     res.status(200).json({
-        message: "Post fetched Successfully"
+        message: "Post fetched Successfully",
+        posts: posts
     })
 }
 
