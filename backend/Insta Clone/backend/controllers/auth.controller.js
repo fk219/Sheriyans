@@ -40,7 +40,11 @@ const registerController = async (req, res) => {
     }
   );
 
-  res.cookie("token", token);
+  res.cookie("token", token, {
+    httpOnly: true,
+    sameSite: "none",
+    secure: true,
+  });
 
   res.status(201).json({
     message: "User Registered Successfully",
@@ -83,7 +87,11 @@ const loginController = async (req, res) => {
     { expiresIn: "1d" }
   );
 
-  res.cookie("token", token);
+  res.cookie("token", token, {
+    httpOnly: true,
+    sameSite: "none",
+    secure: true,
+  });
 
   res.status(200).json({
     message: "User Logged In Successfully",
