@@ -1,0 +1,204 @@
+// .feed-page {
+//     display: flex;
+//     justify-content: center;
+//     align-items: flex-start;
+
+//     .feed{
+//         max-width: 300px;
+//         width: 100%;
+        
+//         .post{
+//             width: 100%;
+//         }
+        
+//         .post{
+//             width: 100%;
+//             display: flex;
+//             flex-direction: column;
+//             gap: 0.5rem;
+//             padding-inline: 0.5rem;
+//             padding-block: 0.5rem;
+
+//             .user{
+//                 display: flex;
+//                 gap: 0.5rem;
+//                 align-items: center;
+
+//                 .img-wrapper{
+//                     border-radius: 50%;
+//                     display: flex;
+//                     justify-content: center;
+//                     align-items: center;
+//                     border: 2px solid transparent;
+//                     background: conic-gradient(red,  orange, purple, orange, red) border-box;
+//                 }
+
+//                 img{
+//                     width: 2rem;
+//                     aspect-ratio: 1/1;
+//                     border-radius:50%;
+//                 }
+//             }
+
+//             .icons{
+//                 display: flex;
+//                 justify-content: space-between;
+//                 padding-inline: 0.4rem;
+                
+//                 .left{
+//                     display: flex;
+//                     gap:0.6rem
+//                 }
+//                 svg{
+//                     width: 1.5rem;
+//                     aspect-ratio: 1/1;
+//                     color: white;
+//                 }
+//                 button{
+//                     background: transparent;
+//                     border: none
+//                 }
+//             }
+
+//             img{
+//                 width: 100%
+//             }
+//         }
+//     }
+// }
+
+
+.feed-page {
+    min-height: 100vh;
+    background-color: #0f0f0f; // Deep dark background
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding-top: 2rem;
+
+    .feed {
+        max-width: 400px; // Slightly wider for better readability
+        width: 100%;
+        
+        .posts {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .post {
+            width: 100%;
+            background-color: #1e1e1e; // Card background
+            border-radius: 12px;
+            overflow: hidden; // Ensures image respects border radius
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+            border: 1px solid #333; // Subtle border
+            
+            display: flex;
+            flex-direction: column;
+            
+            // Header Section
+            .user {
+                display: flex;
+                gap: 0.75rem;
+                align-items: center;
+                padding: 0.8rem 1rem;
+
+                .img-wrapper {
+                    width: 2.5rem;
+                    height: 2.5rem;
+                    border-radius: 50%;
+                    padding: 2px; // Space for the gradient border
+                    background: conic-gradient(#ff0055, #ffcc00, #00ccff, #ff0055);
+                    flex-shrink: 0;
+
+                    img {
+                        width: 100%;
+                        height: 100%;
+                        border-radius: 50%;
+                        object-fit: cover;
+                        border: 2px solid #1e1e1e; // Matches card bg to create gap
+                    }
+                }
+
+                p {
+                    color: #ffffff;
+                    font-weight: 600;
+                    font-size: 0.95rem;
+                    letter-spacing: 0.3px;
+                }
+            }
+
+            // Main Image
+            > img {
+                width: 100%;
+                display: block;
+                aspect-ratio: 4/5; // Standard portrait ratio
+                object-fit: cover;
+            }
+
+            // Footer / Actions Section
+            .bottom {
+                padding: 0.8rem 1rem;
+                display: flex;
+                flex-direction: column;
+                gap: 0.6rem;
+
+                .icons {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    
+                    .left {
+                        display: flex;
+                        gap: 1rem;
+                    }
+
+                    button {
+                        background: transparent;
+                        border: none;
+                        cursor: pointer;
+                        padding: 0;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        transition: transform 0.2s ease, opacity 0.2s;
+
+                        &:hover {
+                            transform: scale(1.1);
+                            opacity: 0.8;
+                        }
+
+                        &:active {
+                            transform: scale(0.95);
+                        }
+
+                        svg {
+                            width: 1.6rem;
+                            height: 1.6rem;
+                            color: #e0e0e0; // Off-white for dark mode
+                            fill: currentColor;
+                            
+                            &:hover {
+                                color: #ffffff;
+                            }
+                        }
+                    }
+                }
+
+                .caption {
+                    color: #cccccc;
+                    font-size: 0.9rem;
+                    line-height: 1.4;
+                    margin: 0;
+                    
+                    span {
+                        font-weight: 600;
+                        color: #ffffff;
+                        margin-right: 0.4rem;
+                    }
+                }
+            }
+        }
+    }
+}
