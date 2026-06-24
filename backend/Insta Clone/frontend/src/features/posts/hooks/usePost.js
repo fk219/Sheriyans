@@ -1,5 +1,6 @@
-import {getFeed} from '../services/post.api.js'
 import {useContext} from 'react'
+
+import {getFeed} from '../services/post.api.js'
 import {PostContext} from '../post.context.jsx'
 
 export const usePost = () => {

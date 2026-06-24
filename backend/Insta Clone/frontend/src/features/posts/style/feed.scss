@@ -70,16 +70,15 @@
 
 .feed-page {
     min-height: 100vh;
-    background-color: #0f0f0f; // Deep dark background
+    background-color: #0f0f0f;
     display: flex;
     justify-content: center;
-    align-items: flex-start;
-    padding-top: 2rem;
+    padding: 2rem 1rem;
 
     .feed {
-        max-width: 400px; // Slightly wider for better readability
+        max-width: 400px;
         width: 100%;
-        
+
         .posts {
             display: flex;
             flex-direction: column;
@@ -88,70 +87,77 @@
 
         .post {
             width: 100%;
-            background-color: #1e1e1e; // Card background
-            border-radius: 12px;
-            overflow: hidden; // Ensures image respects border radius
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-            border: 1px solid #333; // Subtle border
-            
-            display: flex;
-            flex-direction: column;
-            
-            // Header Section
+            background-color: #1e1e1e;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45), 0 1px 0 rgba(255,255,255,0.04) inset;
+
             .user {
                 display: flex;
                 gap: 0.75rem;
                 align-items: center;
-                padding: 0.8rem 1rem;
+                padding: 0.9rem 1rem;
 
                 .img-wrapper {
-                    width: 2.5rem;
-                    height: 2.5rem;
+                    box-sizing: border-box;
+                    width: 2.6rem;
+                    height: 2.6rem;
                     border-radius: 50%;
-                    padding: 2px; // Space for the gradient border
-                    background: conic-gradient(#ff0055, #ffcc00, #00ccff, #ff0055);
+                    padding: 2px;
+                    background: conic-gradient(
+                        from 215deg,
+                        #ffdb8b, #ee2a7b, #6228d7, #ee2a7b, #ffdb8b
+                    );
                     flex-shrink: 0;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
 
                     img {
                         width: 100%;
                         height: 100%;
                         border-radius: 50%;
                         object-fit: cover;
-                        border: 2px solid #1e1e1e; // Matches card bg to create gap
+                        border: 2px solid #1e1e1e;
+                        background-color: #1e1e1e; // prevents transparent-png seams
+                        display: block;
                     }
                 }
 
                 p {
-                    color: #ffffff;
+                    color: #fafafa;
                     font-weight: 600;
                     font-size: 0.95rem;
-                    letter-spacing: 0.3px;
+                    letter-spacing: 0.2px;
                 }
             }
 
-            // Main Image
             > img {
                 width: 100%;
                 display: block;
-                aspect-ratio: 4/5; // Standard portrait ratio
+                aspect-ratio: 4/5;
                 object-fit: cover;
+                background-color: #151515; // shows while loading, no layout jump
             }
 
-            // Footer / Actions Section
             .bottom {
-                padding: 0.8rem 1rem;
+                padding: 0.9rem 1rem 1.1rem;
                 display: flex;
                 flex-direction: column;
-                gap: 0.6rem;
+                gap: 0.7rem;
 
                 .icons {
                     display: flex;
                     justify-content: space-between;
                     align-items: center;
-                    
+
+                    .like{
+                        color: red
+                    }
+
                     .left {
                         display: flex;
-                        gap: 1rem;
+                        gap: 1.1rem;
                     }
 
                     button {
@@ -162,36 +168,35 @@
                         display: flex;
                         align-items: center;
                         justify-content: center;
-                        transition: transform 0.2s ease, opacity 0.2s;
+                        transition: transform 0.15s ease, color 0.15s ease;
+                        color: #e8e8e8;
 
                         &:hover {
-                            transform: scale(1.1);
-                            opacity: 0.8;
+                            transform: scale(1.12);
+                            color: #ffffff;
                         }
-
                         &:active {
-                            transform: scale(0.95);
+                            transform: scale(0.92);
                         }
 
                         svg {
-                            width: 1.6rem;
-                            height: 1.6rem;
-                            color: #e0e0e0; // Off-white for dark mode
+                            width: 1.55rem;
+                            height: 1.55rem;
                             fill: currentColor;
-                            
-                            &:hover {
-                                color: #ffffff;
-                            }
+                        }
+
+                        &[aria-label="Like"]:hover {
+                            color: #ff3b5c; // heart pops red on hover, no animation needed
                         }
                     }
                 }
 
                 .caption {
-                    color: #cccccc;
-                    font-size: 0.9rem;
-                    line-height: 1.4;
+                    color: #d4d4d4;
+                    font-size: 0.92rem;
+                    line-height: 1.45;
                     margin: 0;
-                    
+
                     span {
                         font-weight: 600;
                         color: #ffffff;
