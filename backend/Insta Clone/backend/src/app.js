@@ -13,7 +13,8 @@ app.use(cookieParser())
 app.use(cors({
   origin: [
     "http://localhost:5173",
-    "https://scaling-waddle-q5v7p6gvxj73wrx-5173.app.github.dev"
+    "https://scaling-waddle-q5v7p6gvxj73wrx-5173.app.github.dev",
+    "https://5173-firebase-sheriyans-1776681977873.cluster-55m56i2mgjalcvl276gecmncu6.cloudworkstations.dev"
   ],
   credentials: true,
 }))
