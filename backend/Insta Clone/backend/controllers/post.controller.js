@@ -94,23 +94,25 @@ const likePostController = async (req, res) => {
 const getFeedController = async(req, res) => {
     const user = req.user
 
-    const posts = await Promise.all(await postModel.find().populate('user').lean())
-    .map(async (post)=>{
+    const posts = await postModel.find().populate('user').lean()
 
-        const isLiked = await likeModel.findOne({
-            post: post._id,
-            user: user
+    const postWithLikes = await Promise.all(
+        posts.map(async (post)=> {
+            const isLiked = await likeModel.findOne({
+                post: post._id,
+                user: user.username
+            })
+
+            post.isLiked = !!isLiked
+            return post
         })
-
-        post.isLiked = !!isLiked //Boolean(isLiked)
-
-        return post
-    })
+    )
+    
 
 
     res.status(200).json({
         message: "Post fetched Successfully",
-        posts: posts
+        posts: postWithLikes
     })
 }
 
