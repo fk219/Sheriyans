@@ -10,17 +10,26 @@ export const usePost = () => {
 
     const handleGetFeed = async () => {
         setLoading(true)
-        const data = await getFeed()
-        setFeed(data.posts)
-        setLoading(false)
+        try {
+            const data = await getFeed()
+            setFeed(data.posts)
+        } catch (err) {
+            console.error("Failed to load feed:", err)
+        } finally {
+            setLoading(false)
+        }
     }
 
     const handleCreatePost = async (imageFile, caption) => {
         setLoading(true)
-        const data = await createPost(imageFile, caption)
-        setFeed([data.post, ...feed])
-        setLoading(false)
-
+        try {
+            const data = await createPost(imageFile, caption)
+            setFeed([data.post, ...feed])
+        } catch (err) {
+            console.error("Failed to create post:", err)
+        } finally {
+            setLoading(false)
+        }
     }
 
     return{
