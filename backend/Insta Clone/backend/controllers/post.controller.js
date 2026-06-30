@@ -1,6 +1,5 @@
 const postModel = require("../models/post.model")
 const likeModel = require("../models/like.model")
-
 const identifyUser = require("../middleware/auth.middleware")
 
 const ImageKit = require("@imagekit/nodejs/index.js")
@@ -67,6 +66,33 @@ const getPostDetailsController = async (req, res) => {
     });
 };
 
+const getFeedController = async(req, res) => {
+    const user = req.user
+
+    // const posts = await postModel.find().populate('user').lean().sort({_id:-1})  //For Sorting feed: Latest First On backend
+    const posts = await postModel.find().populate('user').lean()
+
+    const postWithLikes = await Promise.all(
+        posts.map(async (post)=> {
+            const isLiked = await likeModel.findOne({
+                post: post._id,
+                user: user.username
+            })
+
+            post.isLiked = !!isLiked
+            return post
+        })
+    )
+    
+
+
+    res.status(200).json({
+        message: "Post fetched Successfully",
+        posts: postWithLikes
+    })
+}
+
+
 const likePostController = async (req, res) => {
     const user = req.user.username;
     const postId = req.params.postId;
@@ -91,35 +117,45 @@ const likePostController = async (req, res) => {
     })
 }
 
-const getFeedController = async(req, res) => {
-    const user = req.user
+const unLikePostController = async (req, res) => {
+    const user = req.user.username
+    const post = req.params.postId
 
-    const posts = await postModel.find().populate('user').lean().sort({_id:-1})
+    const doesPostExists = await postModel.findById(post)
 
-    const postWithLikes = await Promise.all(
-        posts.map(async (post)=> {
-            const isLiked = await likeModel.findOne({
-                post: post._id,
-                user: user.username
-            })
-
-            post.isLiked = !!isLiked
-            return post
+    if(!doesPostExists){
+        return res.status(404).json({
+            message: "Post Does Not Exists"
         })
-    )
-    
+    }
 
+    const isPostLiked = await likeModel.findOne({
+        post: post,
+        user: user
+    })
+
+    if(!isPostLiked){
+        return res.status(400).json({
+            message: "Post Not Liked Yet"
+        })
+    }
+
+    await likeModel.findOneAndDelete({
+        post: post,
+        user: user
+    })
 
     res.status(200).json({
-        message: "Post fetched Successfully",
-        posts: postWithLikes
+        message: "Post Unliked Successfully"
     })
 }
+
 
 module.exports = {
     createPostController, 
     getPostController,
     getPostDetailsController,
+    getFeedController,
     likePostController,
-    getFeedController
+    unLikePostController
 }

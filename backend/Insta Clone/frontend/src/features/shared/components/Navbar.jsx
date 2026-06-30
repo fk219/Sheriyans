@@ -11,7 +11,7 @@ const Navbar = () => {
       <span className='navbar-brand'>Insta</span>
 
       <div className='navbar-icons'>
-        <button onClick={()=>{navigate('/feed')}}>
+        <button onClick={()=>{navigate('/')}}>
           <svg viewBox="0 0 24 24"><path d="M3 12l9-9 9 9" /><path d="M5 10v10a1 1 0 001 1h3a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1h3a1 1 0 001-1V10" /></svg>
         </button>
 

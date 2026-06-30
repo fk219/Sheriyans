@@ -1,7 +1,7 @@
 import {useContext} from 'react'
 
-import {createPost, getFeed} from '../services/post.api.js'
 import {PostContext} from '../post.context.jsx'
+import {createPost, getFeed, likePost, unLikePost} from '../services/post.api.js'
 
 export const usePost = () => {
     
@@ -12,7 +12,7 @@ export const usePost = () => {
         setLoading(true)
         try {
             const data = await getFeed()
-            setFeed(data.posts)
+            setFeed(data.posts.reverse()) //Sorting feed: latest post first
         } catch (err) {
             console.error("Failed to load feed:", err)
         } finally {
@@ -32,9 +32,21 @@ export const usePost = () => {
         }
     }
 
-    return{
-        loading, feed, post, handleGetFeed, handleCreatePost
+
+    const handleLike = async (post) => {
+        const data = await likePost(post)
+        await handleGetFeed()
+    }
+    
+    
+    const handleUnlike = async (post) => {
+        const data = await unLikePost(post)
+        await handleGetFeed()
     }
 
+
+    return{
+        loading, feed, post, handleGetFeed, handleCreatePost, handleLike, handleUnlike
+    }
 
 }

@@ -17,4 +17,14 @@ export const createPost = async (imageFile, caption) => {
 
     const response = await api.post('/', formData)
     return response.data
-}      
+}
+
+export const likePost = async (postId) => {
+    const response = await api.post('/like/' + postId)
+    return response.data
+}
+
+export const unLikePost = async (postId) => {
+    const response = await api.post('/unlike/' + postId)
+    return response.data
+}
