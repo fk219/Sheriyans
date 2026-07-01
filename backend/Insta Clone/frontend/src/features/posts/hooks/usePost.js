@@ -33,15 +33,14 @@ export const usePost = () => {
     }
 
 
-    const handleLike = async (post) => {
-        const data = await likePost(post)
-        await handleGetFeed()
+    const handleLike = async (postId) => {
+        await likePost(postId)
+        setFeed(feed.map(p => p._id === postId ? {...p, isLiked: true} : p))
     }
-    
-    
-    const handleUnlike = async (post) => {
-        const data = await unLikePost(post)
-        await handleGetFeed()
+
+    const handleUnlike = async (postId) => {
+        await unLikePost(postId)
+        setFeed(feed.map(p => p._id === postId ? {...p, isLiked: false} : p))
     }
 
 
