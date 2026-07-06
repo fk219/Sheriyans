@@ -1,0 +1,34 @@
+.face-expression {
+  max-width: 560px;
+  margin: 32px auto;
+  padding: 20px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #111827, #1f2937);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+  text-align: center;
+
+  &__video {
+    width: 100%;
+    height: 420px;
+    object-fit: cover;
+    border-radius: 16px;
+    background: #000;
+  }
+
+  &__button {
+    margin-top: 16px;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 999px;
+    background: #4f46e5;
+    color: #fff;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  &__result {
+    margin-top: 14px;
+    color: #f9fafb;
+    font-size: 1.2rem;
+  }
+}
