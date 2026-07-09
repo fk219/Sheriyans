@@ -1,5 +1,6 @@
 const userModel = require('../models/user.model')
 const blacklistModel = require('../models/blacklist.model')
+const redis = require('../config/cache')
 
 const bcrypt = require("bcryptjs")
 const jwt = require("jsonwebtoken")
@@ -93,35 +94,26 @@ const loginController = async (req, res) => {
 }
 
 const logoutController = async (req, res) => {
-    try {
-        const token = req.cookies.token
-
-        if (!token) {
-            return res.status(400).json({
-                message: "No active session found"
-            })
-        }
-
-        res.clearCookie("token")
-
-        const existingToken = await blacklistModel.findOne({ token })
-
-        if (!existingToken) {
-            await blacklistModel.create({ token })
-        }
-
-        return res.status(200).json({
-            message: "Logout Successfully!"
-        })
-    } catch (error) {
-        console.error("Logout Error:", error)
-        return res.status(500).json({
-            message: "Logout failed",
-            error: error.message
+  try {
+    const token = req.cookies.token
+    if (!token) {
+      return res.status(400).json({ 
+        message: "No active session found" 
         })
     }
-}
 
+    await redis.set(token, Date.now().toString(), "EX", 60*60)
+    res.clearCookie("token")
+
+    return res.status(200).json({ message: "Logout Successfully!" })
+  } catch (error) {
+    console.error("Logout Error:", error)
+    return res.status(500).json({
+      message: "Logout failed",
+      error: error.message
+    })
+  }
+}
 
 const getMeController = async(req, res) => {
     const userId = req.user.id
