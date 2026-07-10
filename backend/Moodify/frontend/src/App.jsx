@@ -1,12 +1,8 @@
-import FaceExpression from './features/Expression/components/FaceExpression'
+import { RouterProvider } from 'react-router-dom'
+import routes from './app.routes'
 
 function App() {
-
-  return (
-    <>
-      <FaceExpression />
-    </>
-  )
+  return <RouterProvider router={routes} />
 }
 
 export default App
