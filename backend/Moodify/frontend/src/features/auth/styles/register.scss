@@ -1,0 +1,11 @@
+@use "./_auth-common" as *;
+
+.register-page {
+	@extend %auth-page;
+
+	.form-container {
+		@extend %form-container;
+		@extend %form-typography;
+		@extend %form-styles;
+	}
+}

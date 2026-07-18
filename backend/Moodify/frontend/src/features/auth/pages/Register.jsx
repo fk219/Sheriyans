@@ -1,5 +1,5 @@
 import React from 'react'
-import '../styles/login.scss'
+import '../styles/register.scss'
 import FormGroup from '../components/FormGroup'
 
 const Register = () => {

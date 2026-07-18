@@ -1,0 +1,84 @@
+@use "../../shared/styles/button" as *;
+
+// Placeholder selectors to share minimalist auth form styles
+%auth-page {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #000;
+  overflow: hidden;
+}
+
+%form-container {
+  width: min(360px, calc(100% - 40px));
+  background: transparent;
+  padding: 0;
+  border-radius: 0;
+  border: none;
+  box-shadow: none;
+}
+
+%form-typography {
+  h2 {
+    margin: 0 0 6px;
+    color: #b6ff4a;
+    text-align: left;
+    font-size: 22px;
+    font-weight: 500;
+  }
+
+  p {
+    margin: 0 0 18px;
+    color: #777;
+    text-align: left;
+    font-size: 13px;
+  }
+}
+
+%form-styles {
+  form {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+
+    label {
+      font-size: 12px;
+      color: #999;
+      font-weight: 400;
+    }
+
+    input {
+      padding: 10px 0;
+      border: none;
+      border-bottom: 1px solid #222;
+      border-radius: 0;
+      background: transparent;
+      color: #fff;
+      outline: none;
+      transition: border-color 0.2s ease;
+
+      &:focus {
+        border-bottom-color: #b6ff4a;
+      }
+    }
+  }
+
+  .auth-footer {
+    margin-top: 14px;
+    font-size: 0.85rem;
+    color: #999;
+
+    a {
+      color: #b6ff4a;
+      text-decoration: none;
+    }
+  }
+}
