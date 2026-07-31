@@ -21,9 +21,14 @@ export const useAuth = () => {
 
     const handleGetMe = async () => {
         setLoading(true)
-        const response = await getMeApi()
-        setUser(response.user)
-        setLoading(false)
+        try {
+            const response = await getMeApi()
+            setUser(response.user || null)
+        } catch (err) {
+            setUser(null)
+        } finally {
+            setLoading(false)
+        }
     }
 
     const handleLogOut = async () => {

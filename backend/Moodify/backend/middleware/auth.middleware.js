@@ -6,6 +6,8 @@ const redis = require('../config/cache')
 const identifyUser = async (req, res, next) => {
     const token = req.cookies.token
 
+    console.log('identifyUser token:', token)
+
     if (!token) {
         return res.status(401).json({
             message: 'No Token Provided, Please Login/ Register!'
@@ -25,6 +27,7 @@ const identifyUser = async (req, res, next) => {
         req.user = decoded
         return next()
     } catch (err) {
+        console.error('identifyUser verify error:', err.message)
         return res.status(401).json({
             message: "Invalid Token"
         })
