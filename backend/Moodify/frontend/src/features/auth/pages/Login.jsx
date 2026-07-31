@@ -2,7 +2,7 @@ import React, {useState} from 'react'
 import {Link} from 'react-router-dom'
 import '../styles/login.scss'
 import FormGroup from '../components/FormGroup'
-import useAuth from '../hook/useAuth'
+import {useAuth} from '../hook/useAuth'
 import { useNavigate } from 'react-router-dom'
 
 const Login = () => {

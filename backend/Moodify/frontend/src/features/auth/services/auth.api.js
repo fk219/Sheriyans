@@ -1,13 +1,13 @@
-import axios from axios
+import axios from 'axios'
 
-const baseURL = "https://scaling-waddle-q5v7p6gvxj73wrx-3000.app.github.dev/api/auth"
+const baseURL = "https://moodify-backend-8rn5.onrender.com/api/auth"
 
 const api = axios.create({
-    baseURL: baseURL,
+    baseURL,
     withCredentials: true
 })
 
-export const register = async ({username, email, password}) => {
+export const register = async ({ username, email, password }) => {
     const response = await api.post('/register', {
         email, username, password
     })
@@ -15,21 +15,21 @@ export const register = async ({username, email, password}) => {
     return response.data
 }
 
-export const login = async ({username, email, password}) => {
-    const reposnse = await api.post('/login', {
+export const login = async ({ username, email, password }) => {
+    const response = await api.post('/login', {
         username, email, password
     })
     return response.data
 }
 
 export const getMe = async () => {
-    const reposnse = await api.get('/get-me')
+    const response = await api.get('/get-me')
 
-    return resposne.data
+    return response.data
 }
 
-export const logOut = async  () => {
-    const reponse = await api.get('/logout')
-    
-    return response.date
+export const logOut = async () => {
+    const response = await api.get('/logout')
+
+    return response.data
 }

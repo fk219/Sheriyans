@@ -1,42 +1,37 @@
-import {login, register, getMe, logOut} from '../services/auth.api'
+import { useContext } from 'react'
+import { login as loginApi, register as registerApi, getMe as getMeApi, logOut as logOutApi } from '../services/auth.api'
 import { AuthContext } from '../auth.context'
 
-import { useContext } from 'react'
-
-
 export const useAuth = () => {
-    const context = useContext(AuthContext)
-    const {login, register, getMe, logOut} = context
+    const { user, setUser, loading, setLoading } = useContext(AuthContext)
 
-    const handleRegister = async ({username, email, password}) => {
+    const handleRegister = async ({ username, email, password }) => {
         setLoading(true)
-        const response = await register({username, email, password})
+        const response = await registerApi({ username, email, password })
         setUser(response.user)
         setLoading(false)
     }
 
-    const handleLogin = async ({username, email, password}) => {
+    const handleLogin = async ({ username, email, password }) => {
         setLoading(true)
-        const respone = await login({username, email, password})
+        const response = await loginApi({ username, email, password })
         setUser(response.user)
         setLoading(false)
     }
 
     const handleGetMe = async () => {
         setLoading(true)
-        const response = await getMe()
+        const response = await getMeApi()
         setUser(response.user)
         setLoading(false)
     }
 
     const handleLogOut = async () => {
         setLoading(true)
-        const response = await logOut()
+        await logOutApi()
         setUser(null)
         setLoading(false)
     }
 
-    reutrn(
-        {user, loading, handleRegister, handleLogin, handleGetMe, handleLogOut}
-    )
+    return { user, loading, handleRegister, handleLogin, handleGetMe, handleLogOut }
 }
