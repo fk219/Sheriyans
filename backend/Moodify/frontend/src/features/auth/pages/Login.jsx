@@ -15,7 +15,6 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-
     const reponse = await handleLogin({email, password})
     navigate('/')
   }
@@ -27,8 +26,20 @@ const Login = () => {
         <h2>Welcome Back</h2>
         <p>Login to continue</p>
         <form onSubmit={handleSubmit}>
-          <FormGroup value={email} onChange={e => setEmail(e.target.value)} label='Email' type='email' placeholder='Enter your email' />
-          <FormGroup value={password} onChange={e => setPassword(e.target.value)} label='Password' type='password' placeholder='Enter your password' />
+          <FormGroup 
+            value={email} 
+            onChange={e => setEmail(e.target.value)} 
+            label='Email' 
+            type='email' 
+            placeholder='Enter your email' 
+          />
+          <FormGroup 
+            value={password} 
+            onChange={e => setPassword(e.target.value)} 
+            label='Password' 
+            type='password' 
+            placeholder='Enter your password' 
+          />
           <button type='submit' className='button'>Login</button>
         </form>
         <p className='auth-footer'>Don't have an account? <Link to='/register'>Register</Link></p>
