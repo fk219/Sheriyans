@@ -8,7 +8,7 @@ const app = express()
 app.use(express.json())
 app.use(cookieParser())
 app.use(cors({
-    origin: ["https://scaling-waddle-q5v7p6gvxj73wrx-3000.app.github.dev", "https://scaling-waddle-q5v7p6gvxj73wrx-5173.app.github.dev"],
+    origin: ["https://scaling-waddle-q5v7p6gvxj73wrx-3000.app.github.dev", "https://scaling-waddle-q5v7p6gvxj73wrx-5173.app.github.dev", "http://localhost:5173"],
     credentials: true
 }))
 
