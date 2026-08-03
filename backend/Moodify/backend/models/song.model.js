@@ -9,9 +9,16 @@ const songSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    posterImgae: {
-        type: String,
+    posterImage: {
+        type: String,   
         required: true
+    },
+    mood: {
+        type: String,
+        enum: {
+            values: ["happy", "sad", "surprised", "neutral"],
+            message: "Mood is Required"
+        }
     }
 })
 
