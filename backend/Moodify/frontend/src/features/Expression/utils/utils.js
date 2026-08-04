@@ -50,6 +50,7 @@ export function startFaceDetection({
   animationRef,
   setExpression,
   setIsRunning,
+  onExpressionChange,
 }) {
   if (!landmarkerRef.current || !videoRef.current) return;
 
@@ -62,9 +63,13 @@ export function startFaceDetection({
 
     if (result.faceBlendshapes?.length > 0) {
       const blendshapes = result.faceBlendshapes[0].categories;
-      setExpression(classifyExpression(blendshapes));
+      const detectedExpression = classifyExpression(blendshapes);
+      setExpression(detectedExpression);
+      onExpressionChange?.(detectedExpression);
     } else {
-      setExpression("No face detected");
+      const detectedExpression = "No face detected";
+      setExpression(detectedExpression);
+      onExpressionChange?.(detectedExpression);
     }
 
     animationRef.current = requestAnimationFrame(detect);
