@@ -4,16 +4,15 @@ dotenv.config()
 
 
 const errorHandler = (err, req, res, next) => {
-
-    const reponse = {
-        messsage: err.message,
+    const response = {
+        message: err.message,
     }
 
-    if(process.env.NODE_ENV==='development'){
+    if (process.env.NODE_ENV === 'development') {
         response.stack = err.stack
     }
 
-    res.status(err.status).json(reponse)
+    res.status(err.status || 500).json(response)
 }
 
 

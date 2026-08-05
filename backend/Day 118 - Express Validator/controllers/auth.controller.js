@@ -1,7 +1,9 @@
 const registerController = async (req, res, next) => {
 
     try{
-        throw new Error('User Already exists bhadwe')
+        res.status(201).json({
+            message: "Request Reached till Controller"
+        })
     }catch(err){
         err.status = 409
         next(err)
