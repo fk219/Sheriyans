@@ -29,6 +29,8 @@ const userSchema = new mongoose.Schema(
     }, { timestamps: true }
 )
 
+
+// Pre-save hook: hashes the password before saving, but only if it was changed (prevents re-hashing an already-hashed password)
 userSchema.pre('save', async function(next){
     if(!this.isModified('password')){
         return next()
@@ -37,9 +39,11 @@ userSchema.pre('save', async function(next){
     next()
 })
 
+// Instance method: compares a plain-text login password against the stored hashed password
 userSchema.methods.comparePassword = async function(password){
     return await bcrypt.compare(password, this.password)
 }
+
 
 const userModel = mongoose.model('User', userSchema)
 
