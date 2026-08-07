@@ -1,5 +1,5 @@
 import mongoose from "mongoose"
-import bcrypt from "bcrypt"
+import bcrypt from "bcryptjs"
 
 const userSchema = new mongoose.Schema(
     {
@@ -22,9 +22,9 @@ const userSchema = new mongoose.Schema(
             minlength: 6
         },
         verified: {
-            type: String,
+            type: Boolean,
             required: true,
-            enum: ['user', 'ai']
+            default: false
         }
     }, { timestamps: true }
 )
@@ -36,7 +36,6 @@ userSchema.pre('save', async function(next){
         return next()
     }
     this.password = await bcrypt.hash(this.password, 10)
-    next()
 })
 
 // Instance method: compares a plain-text login password against the stored hashed password
