@@ -31,9 +31,9 @@ const userSchema = new mongoose.Schema(
 
 
 // Pre-save hook: hashes the password before saving, but only if it was changed (prevents re-hashing an already-hashed password)
-userSchema.pre('save', async function(next){
+userSchema.pre('save', async function(){
     if(!this.isModified('password')){
-        return next()
+        return
     }
     this.password = await bcrypt.hash(this.password, 10)
 })
