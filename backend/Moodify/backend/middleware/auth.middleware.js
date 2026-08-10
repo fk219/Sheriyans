@@ -6,8 +6,6 @@ const redis = require('../config/cache')
 const identifyUser = async (req, res, next) => {
     const token = req.cookies.token
 
-    console.log('identifyUser token:', token)
-
     if (!token) {
         return res.status(401).json({
             message: 'No Token Provided, Please Login/ Register!'

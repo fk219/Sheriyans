@@ -114,7 +114,12 @@ const loginController = async (req, res, next) => {
 
     return res.status(200).json({
         message: "User Logged In Successfully!",
-        success: true
+        success: true,
+        user: {
+            id: user._id,
+            username: user.username,
+            email: user.email
+        }
     })
 }
 
@@ -201,4 +206,29 @@ const verifyEmailController = async (req, res, next) => {
     }
 }
 
-export { registerController, verifyEmailController, loginController }
+/*
+* @desc Get Current Logged In User Detail
+* @route /api/auth/getme
+* @access PRIVATE
+*/
+const getMeController = async (req, res) => {
+    const userId = req.user.id
+
+    const user = await userModel.findById({user})
+
+    if(!user){
+        return res.status(404).json({
+            message: "User Not Found",
+            success: false,
+            err: "User Not Found"
+        })
+    }
+
+    res.statsu(200).json({
+        message: "User Details Fetched Successfully",
+        success: true,
+        user
+    })
+}
+
+export { registerController, verifyEmailController, loginController, getMeController }

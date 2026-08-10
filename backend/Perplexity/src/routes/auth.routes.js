@@ -1,13 +1,15 @@
 import express from 'express'
 
+import { registerController, verifyEmailController, loginController, getMeController } from '../controllers/auth.controller.js'
 import { validateRegister, validateLogin } from '../validator/auth.validator.js'
-import { registerController, verifyEmailController, loginController } from '../controllers/auth.controller.js'
+import { identifyUser } from '../middleware/aut.middleware.js'
 
 const authRouter = express.Router()
 
 authRouter.post('/register', validateRegister, registerController)
 authRouter.get('/verify-email', verifyEmailController)
 authRouter.post('/login', validateLogin, loginController)
+authRouter.get('/get-me', identifyUser, getMeController)
 
 
 export {authRouter}
