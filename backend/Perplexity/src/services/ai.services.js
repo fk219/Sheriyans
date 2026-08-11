@@ -6,8 +6,11 @@ const model = new ChatGoogleGenerativeAI({
 });
 
 const llmresponse = async () => {
-    const response = await model.invoke("What is FKodeLabs, and who is the founder of FKodeLabs. www.fkodelabs.com in one word")
-    return console.log(response.content)
+    model.invoke("Who is the father of AI, answer in one word")
+        .then((response)=>{
+            console.log(response)
+        })
+        .catch(err=> console.log(err))
 }
 
 export {llmresponse}
