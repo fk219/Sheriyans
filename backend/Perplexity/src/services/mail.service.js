@@ -12,7 +12,6 @@ transporter.verify()
 .then(() => {console.log("Email transporter is ready to send emails")})
 .catch((error) => {console.error("Error occurred while verifying email transporter:", error)})
 
-
 const sendEmail = async (to, subject, html, text) => {
     const mailOptions = {
         from: process.env.GOOGLE_USER,

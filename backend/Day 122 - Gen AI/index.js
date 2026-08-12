@@ -1,7 +1,11 @@
 import "dotenv/config"
 import readline from 'readline/promises'
+import z from 'zod'
+
+import { sendEmail } from "./services.js";
+
+import {HumanMessage, tool, createAgent} from 'langchain'
 import { ChatMistralAI } from "@langchain/mistralai";
-import {HumanMessage} from 'langchain'
 
 
 const rl = readline.createInterface({
@@ -14,10 +18,30 @@ const model = new ChatMistralAI({
     temperature: 0
 })
 
+const emailTool = tool(
+    sendEmail,
+    {
+        name: "emailTool",
+        description: "Use this tool to send emails",
+        schema: z.object({
+            to: z.string().describe("The Recipient's email address"),
+            subject: z.string().describe('The Subject of the Email'),
+            html: z.string().describe("The HTML content of the Email")
+        })
+    }
+)
+
+const agent = createAgent({
+    model,
+    tools: [emailTool]
+})
+
 // rl.question("Hi How can I help you?", async (answer)=> {
 //     const response = await model.invoke(answer)
 //     console.log(response.text)
 // })
+
+
 
 
 const messages = []
@@ -27,9 +51,10 @@ while(true){
 
     messages.push(new HumanMessage(userInput))
 
-    const response = await model.invoke(messages)
+    const response = await agent.invoke({messages})
 
-    messages.push(response)
+    // Push only the AI's last message into history, not the whole response object
+    messages.push(response.messages[response.messages.length - 1])
 
-    console.log("AI:", response.text)
+    console.log(response)
 }
