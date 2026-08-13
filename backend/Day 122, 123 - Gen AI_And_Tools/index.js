@@ -2,7 +2,8 @@ import "dotenv/config"
 import readline from 'readline/promises'
 import z from 'zod'
 
-import { sendEmail } from "./services.js";
+import { sendEmail } from "./email.services.js";
+import { searchGoogle } from "./search.services.js";
 
 import {HumanMessage, tool, createAgent} from 'langchain'
 import { ChatMistralAI } from "@langchain/mistralai";
@@ -22,7 +23,7 @@ const emailTool = tool(
     sendEmail,
     {
         name: "emailTool",
-        description: "Use this tool to send emails",
+        description: "Use this tool to send emails, The email we will be using is 'fkodelabs@fkodelabs.com'",
         schema: z.object({
             to: z.string().describe("The Recipient's email address"),
             subject: z.string().describe('The Subject of the Email'),
@@ -31,18 +32,26 @@ const emailTool = tool(
     }
 )
 
+const googleSearchTool = tool(
+    searchGoogle,
+    {
+        name: "googleSeacrhTool",
+        description: "Use this tool to seacrh through Web, You can use Google Search.  You can coonect to live Web/ Internte using this tool",
+        schema: z.object({
+            query: z.string().describe("The query you want to seach on google")
+        })
+    }
+)
+
 const agent = createAgent({
     model,
-    tools: [emailTool]
+    tools: [emailTool, googleSearchTool]
 })
 
 // rl.question("Hi How can I help you?", async (answer)=> {
 //     const response = await model.invoke(answer)
 //     console.log(response.text)
 // })
-
-
-
 
 const messages = []
 
