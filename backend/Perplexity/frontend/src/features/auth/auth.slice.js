@@ -11,11 +11,11 @@ const authSlice = createSlice({
         setUser: (state, action) => {
             state.user = action.payload
         },
-        setLoading: (sate, action) => {
-            state.user = action.loading
+        setLoading: (state, action) => {
+            state.loading = action.payload
         },
         setError: (state, action) => {
-            state.user = action.loading
+            state.user = action.payload
         }
     }
 })

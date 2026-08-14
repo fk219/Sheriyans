@@ -18,7 +18,7 @@ export default function RegisterPage() {
   const handleSubmit = (e) => {
     e.preventDefault();
     console.log("Register submitted:", registerData);
-    // TODO: call your register API here
+
   };
 
   return (

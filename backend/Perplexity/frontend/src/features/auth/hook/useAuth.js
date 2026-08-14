@@ -21,8 +21,8 @@ export const useAuth = () => {
 
     const handleLogin = async ({email, password}) => {
         try{
-            dispath(setLoading(true))
-            const date = await login({email, password})
+            dispatch(setLoading(true))
+            const data = await login({email, password})
             dispatch(setUser(data.user))
         }catch(error){
             dispatch(setError(error.response?.data?.message || "Login Failed!"))
@@ -33,11 +33,11 @@ export const useAuth = () => {
 
     const handleGetMe = async () => {
         try{
-            dispatch(setLoadin(true))
+            dispatch(setLoading(true))
             const data = await getMe()
             dispatch(setUser(data.user))
         }catch(error){
-            dispatch(setError(error.response?.data?.messgae || "Failed Fetching User Data!"))
+            dispatch(setError(error.response?.data?.message || "Failed Fetching User Data!"))
         }finally{
             dispatch(setLoading(false))
         }

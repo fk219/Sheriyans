@@ -1,10 +1,11 @@
-"use client";
-
 import { useState } from "react";
 import { Eye, EyeOff, Mail, Lock, ArrowRight } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import {useAuth} from '../hook/useAuth'
 
 export default function LoginPage() {
+  const naviagte = useNavigate()
+  const {handleLogin} = useAuth()
   const [showPassword, setShowPassword] = useState(false);
   const [loginData, setLoginData] = useState({
     email: "",
@@ -16,10 +17,11 @@ export default function LoginPage() {
     setLoginData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    await handleLogin(loginData)
+    naviagte('/')
     console.log("Login submitted:", loginData);
-    // TODO: call your login API here
   };
 
   return (
