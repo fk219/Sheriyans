@@ -2,10 +2,16 @@ import { useState } from "react";
 import { Eye, EyeOff, Mail, Lock, ArrowRight } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import {useAuth} from '../hook/useAuth'
+import { useSelector } from "react-redux";
+import { Navigate } from "react-router-dom";
 
 export default function LoginPage() {
   const naviagte = useNavigate()
   const {handleLogin} = useAuth()
+  
+  const user = useSelector(state => state.auth.user)
+  const loading = useSelector(state => state.auth.loading) 
+  
   const [showPassword, setShowPassword] = useState(false);
   const [loginData, setLoginData] = useState({
     email: "",
@@ -22,6 +28,13 @@ export default function LoginPage() {
     await handleLogin(loginData)
     naviagte('/')
   };
+  
+  if(loading){
+    return <div>Loading...</div>
+  }
+  if(user){
+      return <Navigate to='/' replace/>
+  }
 
   return (
     <div className="min-h-screen w-full bg-[#0b0b0c] flex items-center justify-center p-4">
