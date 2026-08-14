@@ -109,8 +109,14 @@ const loginController = async (req, res, next) => {
         email: user.email
     }, process.env.JWT_SECRET, {expiresIn: '1d'})
 
+    const isProduction = process.env.NODE_ENV === "production"
 
-    res.cookie("token", token)
+    res.cookie("token", token, {
+        httpOnly: true,
+        secure: isProduction,
+        sameSite: isProduction ? "none" : "lax",
+        maxAge: 24 * 60 * 60 * 1000
+    })
 
     return res.status(200).json({
         message: "User Logged In Successfully!",
@@ -214,7 +220,7 @@ const verifyEmailController = async (req, res, next) => {
 const getMeController = async (req, res) => {
     const userId = req.user.id
 
-    const user = await userModel.findById({user})
+    const user = await userModel.findById(userId)
 
     if(!user){
         return res.status(404).json({
@@ -224,7 +230,7 @@ const getMeController = async (req, res) => {
         })
     }
 
-    res.statsu(200).json({
+    res.status(200).json({
         message: "User Details Fetched Successfully",
         success: true,
         user

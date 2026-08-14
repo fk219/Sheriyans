@@ -21,7 +21,6 @@ export default function LoginPage() {
     e.preventDefault();
     await handleLogin(loginData)
     naviagte('/')
-    console.log("Login submitted:", loginData);
   };
 
   return (

@@ -16,6 +16,6 @@ export const login = async ({email, password}) => {
 }
 
 export const getMe = async () => {
-    const response = await api.get('/api/post/get-me')
+    const response = await api.get('/api/auth/get-me')
     return response.data
 } 
