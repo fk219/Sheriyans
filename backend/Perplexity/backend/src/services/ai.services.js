@@ -1,16 +1,16 @@
-import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
+import { ChatMistralAI } from "@langchain/mistralai";
+import { HumanMessage } from 'langchain'
 
-const model = new ChatGoogleGenerativeAI({
-  model: "gemini-3.6-flash",
-  apiKey: process.env.GEMINI_API
+const model = new ChatMistralAI({
+  model: "mistral-small-latest"
 });
 
-const llmresponse = async () => {
-    model.invoke("Who is the father of AI, answer in one word")
-        .then((response)=>{
-            console.log(response)
-        })
-        .catch(err=> console.log(err))
+const generateResponse = async (message) => {
+  const response = await model.invoke([
+    new HumanMessage(message)
+  ])
+
+  return response.text
 }
 
-export {llmresponse}
+export {generateResponse}

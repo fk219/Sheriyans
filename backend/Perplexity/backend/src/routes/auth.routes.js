@@ -12,4 +12,4 @@ authRouter.post('/login', validateLogin, loginController)
 authRouter.get('/get-me', identifyUser, getMeController)
 
 
-export {authRouter}
+export default authRouter
