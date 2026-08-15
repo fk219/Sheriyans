@@ -85,7 +85,7 @@ const getMessages = async (req, res) => {
     })
 }
 
-const deleteChats = async (req, res) => {
+const deleteChat = async (req, res) => {
     const userId = req.user.id
     const {chatId} = req.params
 
@@ -114,4 +114,4 @@ const deleteChats = async (req, res) => {
     
 }
 
-export {sendMessages, getChats, getMessages, deleteChats}
+export {sendMessages, getChats, getMessages, deleteChat}
