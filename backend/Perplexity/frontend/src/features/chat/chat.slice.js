@@ -1,6 +1,5 @@
 import {createSlice} from '@reduxjs/toolkit'
 import { setError, setLoading } from '../auth/auth.slice'
-import { Satellite } from 'lucide-react'
 
 const chatSlice = createSlice({
     name: "chat",
