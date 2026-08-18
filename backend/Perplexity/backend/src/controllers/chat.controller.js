@@ -62,7 +62,7 @@ const getMessages = async (req, res) => {
     const {chatId} = req.params
 
     const chat = await chatModel.findOne({
-        user: req.user._id,
+        user: req.user.id,
         _id: chatId
     })
 

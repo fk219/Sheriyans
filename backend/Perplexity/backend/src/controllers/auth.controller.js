@@ -2,8 +2,8 @@ import {userModel} from '../models/user.model.js'
 import {sendEmail} from '../services/mail.service.js'
 import jwt from 'jsonwebtoken'
 
-
-const Url = 'https://scaling-waddle-q5v7p6gvxj73wrx-3000.app.github.dev/'
+const frontendUrl = process.env.FRONTEND_URL || 'https://scaling-waddle-q5v7p6gvxj73wrx-5173.app.github.dev'
+const backendUrl = process.env.BACKEND_URL || 'https://scaling-waddle-q5v7p6gvxj73wrx-3000.app.github.dev'
 
 /*
 * @desc Register A New User
@@ -46,7 +46,7 @@ const registerController = async (req, res, next) => {
                 <div style="padding:32px 24px;text-align:center;">
                     <h2 style="margin:0 0 8px;color:#111827;font-size:20px;">Verify your email</h2>
                     <p style="margin:0 0 24px;color:#6b7280;font-size:15px;">Tap the button below to confirm your address.</p>
-                    <a href="${frontendUrl}/api/auth/verify-email?token=${emailVerificationToken}"
+                    <a href="${backendUrl}/api/auth/verify-email?token=${emailVerificationToken}"
                        style="display:inline-block;background:linear-gradient(135deg,#84cc16,#10b981);color:#ffffff;text-decoration:none;padding:12px 32px;border-radius:8px;font-size:15px;font-weight:600;">
                         Verify Email
                     </a>
