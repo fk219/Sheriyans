@@ -2,53 +2,77 @@ import { createSlice } from '@reduxjs/toolkit'
 
 /**
  * ============================================================================
- * LAYER 2: REDUX STATE MANAGEMENT SLICE (chat.slice.js)
+ * ARCHITECTURE LAYER 2: REDUX STATE MANAGEMENT SLICE (chat.slice.js)
  * ============================================================================
  * 
  * WHAT IS THIS FILE?
- * This file defines the global "Single Source of Truth" for our chat feature.
- * In Redux Toolkit:
- * - `initialState`: Defines what the data starts like.
- * - `reducers`: Functions that describe HOW to mutate/update that data.
- * - `actions`: Auto-generated trigger functions that components dispatch to run reducers.
- *
- * HOW IS `state.chats` STRUCTURED?
- * We store chats as a dictionary (Key-Value Object) instead of an array.
- * Key = chatId (`_id`), Value = Chat object containing its metadata and messages array.
+ * This is the central in-memory database of our frontend (Single Source of Truth).
+ * Any React component (like `Dashboard.jsx`) can read state from here using `useSelector`,
+ * and any controller hook (like `useChat.js`) can update this state using `dispatch(action)`.
  * 
- * Example of `state`:
- * {
+ * WHY DICTIONARY (KEY-VALUE OBJECT) FOR `chats` INSTEAD OF AN ARRAY?
+ * If `chats` was an array `[ { _id: "1", ... }, { _id: "2", ... } ]`:
+ * - Finding a chat to insert a new message would require `array.find()` -> O(n) slow lookup.
+ * By storing it as an object dictionary `{ "1": { ... }, "2": { ... } }`:
+ * - We can instantly read or update `state.chats[chatId]` -> O(1) instant lookup!
+ * 
+ * ----------------------------------------------------------------------------
+ * COMPLETE REDUX STATE STRUCTURE & SAMPLE DATA:
+ * ----------------------------------------------------------------------------
+ * state.chat = {
  *   chats: {
- *     "66a012bc": {
- *       _id: "66a012bc",
- *       title: "How does Javascript work?",
+ *     "66a012bc394a8f10": {
+ *       _id: "66a012bc394a8f10",
+ *       title: "Node.js Basics",
  *       messages: [
- *         { _id: "m1", role: "user", content: "How does Javascript work?" },
- *         { _id: "m2", role: "ai",   content: "Javascript is single-threaded..." }
- *       ]
+ *         {
+ *           _id: "msg_001",
+ *           role: "user",
+ *           content: "What is Node.js?",
+ *           createdAt: "2026-08-19T10:00:00.000Z"
+ *         },
+ *         {
+ *           _id: "msg_002",
+ *           role: "ai",
+ *           content: "Node.js is an open-source, cross-platform JavaScript runtime...",
+ *           createdAt: "2026-08-19T10:00:04.000Z"
+ *         }
+ *       ],
+ *       updatedAt: "2026-08-19T10:00:04.000Z"
  *     }
  *   },
- *   currentChatId: "66a012bc", // Tells UI which chat is actively open on the screen
- *   loading: false,            // True when waiting for backend/AI response
- *   error: null                // Error message string if something fails
+ *   currentChatId: "66a012bc394a8f10", // ID of chat currently displayed on screen (null = hero landing page)
+ *   loading: false,                     // true when AI is generating response or fetching data
+ *   error: null                         // Error message string if any request fails, otherwise null
  * }
  */
 const chatSlice = createSlice({
     name: "chat",
     initialState: {
-        chats: {},           // Object map of all chats keyed by chatId
-        currentChatId: null, // Active chat ID (null = new thread / landing view)
-        loading: false,      // Boolean loading state for spinners & button disabling
-        error: null          // Stores error message or null
+        chats: {},           // Object map: { [chatId]: { _id, title, messages: [], updatedAt } }
+        currentChatId: null, // String chatId or null
+        loading: false,      // Boolean: shows loading indicator / disables send button
+        error: null          // String | null
     },
     reducers: {
         /**
+         * --------------------------------------------------------------------
          * 1. createNewChat
-         * WHY: When a user sends their first message in a brand new thread, the backend
-         * creates a new chat document with an AI-generated title and `_id`. We need
-         * to register this brand new chat inside `state.chats`.
+         * --------------------------------------------------------------------
+         * PURPOSE:
+         * Registers a brand new chat session in the Redux store.
          * 
-         * PAYLOAD EXPECTED: { chatId: "...", title: "..." }
+         * WHEN IS IT DISPATCHED?
+         * When the user starts a fresh conversation and backend responds with `data.newChat`.
+         * 
+         * SAMPLE ACTION PAYLOAD:
+         * {
+         *   chatId: "66a012bc394a8f10",
+         *   title: "Node.js Basics"
+         * }
+         * 
+         * WHAT IT DOES TO STATE:
+         * Inserts a new key `state.chats["66a012bc394a8f10"]` with an empty `messages: []` array.
          */
         createNewChat: (state, action) => {
             const { chatId, title } = action.payload
@@ -60,13 +84,28 @@ const chatSlice = createSlice({
         },
 
         /**
+         * --------------------------------------------------------------------
          * 2. addNewMessage
-         * WHY: Whenever a message arrives (either the user sent a prompt, or AI responded),
-         * we push that single message to `state.chats[chatId].messages`.
+         * --------------------------------------------------------------------
+         * PURPOSE:
+         * Appends a single message (either user prompt or AI response) to the active chat.
          * 
-         * SAFETY: If for some reason the chat entry doesn't exist yet, it creates it first.
+         * WHEN IS IT DISPATCHED?
+         * 1. Immediately when user clicks send (Optimistic UI update).
+         * 2. When AI response is received from backend or WebSocket.
          * 
-         * PAYLOAD EXPECTED: { chatId: "...", message: { _id, role: "user"|"ai", content: "..." } }
+         * SAMPLE ACTION PAYLOAD:
+         * {
+         *   chatId: "66a012bc394a8f10",
+         *   message: {
+         *     role: "user",
+         *     content: "What is Node.js?"
+         *   }
+         * }
+         * 
+         * WHAT IT DOES TO STATE:
+         * Finds `state.chats[chatId].messages` and does `.push(message)`.
+         * (If chat entry didn't exist, safely initializes it first).
          */
         addNewMessage: (state, action) => {
             const { chatId, message } = action.payload
@@ -81,12 +120,24 @@ const chatSlice = createSlice({
         },
 
         /**
+         * --------------------------------------------------------------------
          * 3. setMessages
-         * WHY: When a user clicks on an old chat from the sidebar, we fetch its entire
-         * message history from the backend (`/api/chats/:chatId/messages`). This reducer
-         * sets/replaces the entire `messages` array for that specific chat session.
+         * --------------------------------------------------------------------
+         * PURPOSE:
+         * Replaces the entire `messages` array of a specific chat with a full list of messages.
          * 
-         * PAYLOAD EXPECTED: { chatId: "...", messages: [ {...}, {...} ] }
+         * WHEN IS IT DISPATCHED?
+         * 1. When user clicks an old chat thread from sidebar -> Fetches full message history.
+         * 2. When a new chat finishes loading -> Replaces temporary messages with official backend messages.
+         * 
+         * SAMPLE ACTION PAYLOAD:
+         * {
+         *   chatId: "66a012bc394a8f10",
+         *   messages: [
+         *     { _id: "m1", role: "user", content: "Hi" },
+         *     { _id: "m2", role: "ai", content: "Hello! How can I help you?" }
+         *   ]
+         * }
          */
         setMessages: (state, action) => {
             const { chatId, messages } = action.payload
@@ -101,44 +152,64 @@ const chatSlice = createSlice({
         },
 
         /**
+         * --------------------------------------------------------------------
          * 4. setChats
-         * WHY: When Dashboard first loads, we fetch the list of all past chats from the backend
-         * to show in the sidebar. This reducer sets the whole `state.chats` object.
+         * --------------------------------------------------------------------
+         * PURPOSE:
+         * Populates the complete sidebar list of all chat sessions.
          * 
-         * PAYLOAD EXPECTED: Object map { "chatId1": { ... }, "chatId2": { ... } }
+         * WHEN IS IT DISPATCHED?
+         * On initial dashboard mount (`useEffect`) after `getChats()` API returns.
+         * 
+         * SAMPLE ACTION PAYLOAD:
+         * {
+         *   "66a012bc394a8f10": { _id: "66a012bc394a8f10", title: "Node.js Basics", messages: [] },
+         *   "66a099ef412b1234": { _id: "66a099ef412b1234", title: "React Hooks", messages: [] }
+         * }
          */
         setChats: (state, action) => {
             state.chats = action.payload
         },
 
         /**
+         * --------------------------------------------------------------------
          * 5. setCurrentChatId
-         * WHY: Controls which conversation is displayed on the main screen.
-         * - Setting to `"chatId123"` opens that chat's conversation feed.
-         * - Setting to `null` displays the clean "Where knowledge begins" hero prompt.
+         * --------------------------------------------------------------------
+         * PURPOSE:
+         * Tells the UI which chat conversation should be shown on screen.
          * 
-         * PAYLOAD EXPECTED: "chatId123" OR null
+         * WHEN IS IT DISPATCHED?
+         * - Dispatched with `"66a012bc..."` when user clicks a sidebar chat or creates a new one.
+         * - Dispatched with `null` when user clicks "+ New Thread" button.
+         * 
+         * SAMPLE ACTION PAYLOAD:
+         * "66a012bc394a8f10"   OR   null
          */
         setCurrentChatId: (state, action) => {
             state.currentChatId = action.payload
         },
 
         /**
+         * --------------------------------------------------------------------
          * 6. setLoading
-         * WHY: Indicates whether an async operation (like waiting for Gemini AI or fetching chats)
-         * is in progress. The UI uses this to show "Thinking..." and disable the Send button.
+         * --------------------------------------------------------------------
+         * PURPOSE:
+         * Toggles loading spinner in the UI and disables the submit button.
          * 
-         * PAYLOAD EXPECTED: true | false
+         * SAMPLE ACTION PAYLOAD: true | false
          */
         setLoading: (state, action) => {
             state.loading = action.payload
         },
 
         /**
+         * --------------------------------------------------------------------
          * 7. setError
-         * WHY: Stores any error message returned from the backend or Axios failure.
+         * --------------------------------------------------------------------
+         * PURPOSE:
+         * Stores error message string if an API fails, or clears it with null.
          * 
-         * PAYLOAD EXPECTED: "Error message string" | null
+         * SAMPLE ACTION PAYLOAD: "Network error occurred" | null
          */
         setError: (state, action) => {
             state.error = action.payload
