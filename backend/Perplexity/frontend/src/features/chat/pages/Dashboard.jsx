@@ -1,62 +1,67 @@
-import React, { useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { Compass, Plus, Send, User, Bot, Sparkles, Loader2, PanelLeftClose, PanelLeftOpen, MessageSquare } from "lucide-react";
+import { 
+  Plus, 
+  ArrowUp, 
+  PanelLeftClose, 
+  PanelLeft, 
+  MessageSquare, 
+  Globe, 
+  Code, 
+  Lightbulb, 
+  Compass,
+  Sparkles,
+  Search
+} from "lucide-react";
+import ReactMarkdown from "react-markdown";
 import useChat from "../hook/useChat";
 import { setCurrentChatId } from "../chat.slice";
 
-/**
- * ============================================================================
- * DASHBOARD COMPONENT (Clean, Minimal & Beginner-Friendly)
- * ============================================================================
- * Flow:
- * 1. User types query in input box & hits Send/Enter.
- * 2. `useChat().handleSendMessage` sends { message, chatId } to backend API.
- * 3. Redux stores the new messages in `state.chat.chats`.
- * 4. We grab messages for `currentChatId` and display them in the center hero feed.
- * 5. Simple collapsible sidebar lists previous chat sessions.
- */
 const Dashboard = () => {
   const dispatch = useDispatch();
-  const { handleSendMessage } = useChat();
+  const messagesEndRef = useRef(null);
 
-  // Local UI states
+  const {
+    initializeSocketConnection,
+    handleSendMessage,
+    handleGetChats,
+    handleOpenChats,
+  } = useChat();
+
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [inputText, setInputText] = useState("");
 
-  // Redux state: get all chats, current active chat ID, and loading status
   const chats = useSelector((state) => state.chat.chats);
   const currentChatId = useSelector((state) => state.chat.currentChatId);
   const loading = useSelector((state) => state.chat.loading);
 
-  // Convert chats object to an array for simple list rendering in the sidebar
   const chatList = Object.values(chats || {});
-
-  // Get current active chat's messages (or empty list if no active chat)
   const activeChat = currentChatId ? chats[currentChatId] : null;
   const messages = activeChat?.messages || [];
 
-  // --------------------------------------------------------------------------
-  // Handlers
-  // --------------------------------------------------------------------------
-  
-  // Submit message to backend
-  const handleSubmit = async (e) => {
-    if (e) e.preventDefault();
+  useEffect(() => {
+    initializeSocketConnection();
+    handleGetChats();
+  }, []);
 
-    const trimmed = inputText.trim();
+  useEffect(() => {
+    if (messages.length > 0) {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messages, loading]);
+
+  const handleSubmit = async (textToSend) => {
+    const query = typeof textToSend === "string" ? textToSend : inputText;
+    const trimmed = query.trim();
     if (!trimmed || loading) return;
 
-    // Clear input field immediately for good UX
     setInputText("");
-
-    // Send to backend via hook
     await handleSendMessage({
       message: trimmed,
       chatId: currentChatId,
     });
   };
 
-  // Allow sending on Enter key (Shift+Enter makes newline)
   const handleKeyDown = (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
@@ -64,174 +69,224 @@ const Dashboard = () => {
     }
   };
 
-  // Reset to empty screen / start a new thread
   const handleNewThread = () => {
     dispatch(setCurrentChatId(null));
     setInputText("");
   };
 
+  const heroSuggestions = [
+    { icon: Globe, label: "Explore trends in artificial intelligence", query: "What are the latest breakthroughs and trends in AI for 2025-2026?" },
+    { icon: Code, label: "Write a high-performance React hook", query: "Can you create a custom performant debounce hook in React with TypeScript?" },
+    { icon: Lightbulb, label: "Explain quantum computing simply", query: "Explain quantum computing and superposition with simple real-world analogies." },
+  ];
+
   return (
-    <div className="flex h-screen w-full bg-[#0b0b0c] text-neutral-200 font-sans overflow-hidden">
+    <div className="flex h-screen w-full bg-[#191a1a] text-[#e8e8e6] antialiased overflow-hidden select-none">
       
-      {/* =========================================================================
-          1. SIMPLE SIDEBAR UI
-         ========================================================================= */}
+      {/* SIDEBAR */}
       {isSidebarOpen && (
-        <aside className="w-64 min-w-64 bg-[#141416] border-r border-neutral-800/80 flex flex-col justify-between p-3.5 z-20 transition-all">
-          <div className="space-y-3">
-            {/* Sidebar Header with Logo & Toggle Button */}
-            <div className="flex items-center justify-between pb-2 border-b border-neutral-800/60">
-              <div className="flex items-center gap-2 font-semibold text-white">
-                <div className="w-7 h-7 rounded-lg bg-lime-400/10 border border-lime-400/30 flex items-center justify-center text-lime-400">
+        <aside className="w-64 min-w-64 bg-[#141515] border-r border-white/[0.06] flex flex-col justify-between p-3 z-20 transition-all select-text">
+          <div className="flex flex-col h-full space-y-3">
+            {/* Header */}
+            <div className="flex items-center justify-between px-2 pt-1 pb-2">
+              <div 
+                onClick={handleNewThread}
+                className="flex items-center gap-2 font-medium tracking-tight text-white cursor-pointer hover:opacity-80 transition-opacity"
+              >
+                <div className="w-5 h-5 flex items-center justify-center text-teal-400">
                   <Compass className="w-4 h-4" />
                 </div>
-                <span className="tracking-tight">Perplexity</span>
+                <span className="text-sm font-semibold tracking-tight">perplexity</span>
               </div>
               
               <button
                 onClick={() => setIsSidebarOpen(false)}
-                className="p-1.5 rounded-lg text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors"
-                title="Collapse sidebar"
+                className="p-1 rounded-md text-neutral-400 hover:text-white hover:bg-white/[0.06] transition-colors cursor-pointer"
+                title="Close sidebar"
               >
                 <PanelLeftClose className="w-4 h-4" />
               </button>
             </div>
 
-            {/* New Thread Button */}
+            {/* New Thread Action */}
             <button
               onClick={handleNewThread}
-              className="w-full flex items-center gap-2 px-3 py-2 rounded-xl bg-[#1c1c1f] hover:bg-[#232327] text-xs font-medium text-white border border-neutral-800 transition-all shadow-sm"
+              className="w-full flex items-center justify-between px-3 py-2 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] text-xs font-medium text-neutral-200 border border-white/[0.06] transition-all cursor-pointer group"
             >
-              <Plus className="w-4 h-4 text-lime-400" />
-              <span>New Thread</span>
+              <span className="flex items-center gap-2">
+                <Plus className="w-3.5 h-3.5 text-neutral-400 group-hover:text-white transition-colors" />
+                New Thread
+              </span>
+              <kbd className="text-[10px] text-neutral-500 font-mono">Ctrl K</kbd>
             </button>
 
-            {/* Recent Threads List */}
-            <div className="pt-2">
-              <div className="px-2 pb-1.5 text-[11px] font-medium text-neutral-500 uppercase tracking-wider">
-                Recent Threads
+            {/* Threads List */}
+            <div className="flex-1 overflow-y-auto pt-2 space-y-0.5">
+              <div className="px-2 pb-1 text-[11px] font-medium text-neutral-500">
+                Library
               </div>
               
-              <div className="space-y-1 max-h-[calc(100vh-220px)] overflow-y-auto scrollbar-thin scrollbar-thumb-neutral-800">
-                {chatList.length === 0 ? (
-                  <p className="px-2 py-3 text-xs text-neutral-600">No previous chats</p>
-                ) : (
-                  chatList.map((chat) => {
-                    const isActive = currentChatId === chat._id;
-                    return (
-                      <button
-                        key={chat._id}
-                        onClick={() => dispatch(setCurrentChatId(chat._id))}
-                        className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-xs text-left truncate transition-colors ${
-                          isActive
-                            ? "bg-[#1f1f23] text-white font-medium border border-neutral-700/60"
-                            : "text-neutral-400 hover:bg-[#1a1a1d] hover:text-neutral-200"
-                        }`}
-                      >
-                        <MessageSquare className={`w-3.5 h-3.5 shrink-0 ${isActive ? "text-lime-400" : "text-neutral-500"}`} />
-                        <span className="truncate">{chat.title || "Untitled Chat"}</span>
-                      </button>
-                    );
-                  })
-                )}
-              </div>
+              {chatList.length === 0 ? (
+                <p className="px-2 py-4 text-xs text-neutral-600">No threads yet</p>
+              ) : (
+                chatList.map((chat) => {
+                  const isActive = currentChatId === chat._id;
+                  return (
+                    <button
+                      key={chat._id}
+                      onClick={() => handleOpenChats(chat._id)}
+                      className={`w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-xs text-left truncate transition-colors cursor-pointer ${
+                        isActive
+                          ? "bg-white/[0.08] text-white font-medium"
+                          : "text-neutral-400 hover:bg-white/[0.04] hover:text-neutral-200"
+                      }`}
+                    >
+                      <MessageSquare className="w-3.5 h-3.5 shrink-0 opacity-60" />
+                      <span className="truncate">{chat.title || "Untitled"}</span>
+                    </button>
+                  );
+                })
+              )}
             </div>
-          </div>
-
-          {/* User Profile Footer */}
-          <div className="flex items-center gap-2.5 pt-3 border-t border-neutral-800/80 text-xs text-neutral-400">
-            <div className="w-7 h-7 rounded-full bg-neutral-800 border border-neutral-700 flex items-center justify-center text-neutral-300">
-              <User className="w-4 h-4" />
-            </div>
-            <span className="font-medium truncate">User Account</span>
           </div>
         </aside>
       )}
 
-      {/* =========================================================================
-          2. MAIN CHAT & HERO CONTAINER
-         ========================================================================= */}
-      <main className="flex-1 flex flex-col h-full relative overflow-hidden">
+      {/* MAIN CONTENT AREA */}
+      <main className="flex-1 flex flex-col h-full relative overflow-hidden select-text">
         
-        {/* Top Header Navbar */}
-        <header className="h-14 border-b border-neutral-800/60 flex items-center justify-between px-4 sm:px-6 bg-[#0b0b0c]/80 backdrop-blur-md z-10">
+        {/* Minimal Nav Header */}
+        <header className="h-12 border-b border-white/[0.04] flex items-center justify-between px-4 sm:px-6 bg-[#191a1a]/80 backdrop-blur-sm z-10">
           <div className="flex items-center gap-3">
-            {/* Button to re-open sidebar when collapsed */}
             {!isSidebarOpen && (
               <button
                 onClick={() => setIsSidebarOpen(true)}
-                className="p-1.5 rounded-lg text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors"
-                title="Expand sidebar"
+                className="p-1 rounded-md text-neutral-400 hover:text-white hover:bg-white/[0.06] transition-colors cursor-pointer"
+                title="Open sidebar"
               >
-                <PanelLeftOpen className="w-4 h-4" />
+                <PanelLeft className="w-4 h-4" />
               </button>
             )}
 
-            <div className="flex items-center gap-2 font-medium text-sm text-neutral-300">
-              <span>{activeChat?.title || "New Thread"}</span>
-            </div>
+            <span className="text-xs font-medium text-neutral-400 truncate max-w-sm sm:max-w-md">
+              {activeChat?.title || "New Thread"}
+            </span>
           </div>
 
-          {/* New Thread Button in Header */}
-          <button
-            onClick={handleNewThread}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-[#18181b] hover:bg-[#222226] text-neutral-200 border border-neutral-800 transition-colors"
-          >
-            <Plus className="w-3.5 h-3.5 text-lime-400" />
-            <span>New</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleNewThread}
+              className="p-1.5 rounded-md text-neutral-400 hover:text-white hover:bg-white/[0.06] transition-colors cursor-pointer"
+              title="New Thread"
+            >
+              <Plus className="w-4 h-4" />
+            </button>
+          </div>
         </header>
 
-        {/* Scrollable Center Feed */}
-        <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-6 scrollbar-thin scrollbar-thumb-neutral-800">
-          <div className="max-w-3xl mx-auto space-y-6 pb-32">
+        {/* Scrollable Center Section */}
+        <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-6">
+          <div className="max-w-2xl mx-auto space-y-8 pb-36 pt-4">
             
-            {/* HERO VIEW: Shown when no messages exist yet */}
+            {/* HERO VIEW: Ultra clean, Grok / Perplexity inspired */}
             {messages.length === 0 ? (
-              <div className="flex flex-col items-center justify-center min-h-[55vh] text-center space-y-4">
-                <div className="w-12 h-12 rounded-2xl bg-lime-400/10 border border-lime-400/20 flex items-center justify-center text-lime-400">
-                  <Sparkles className="w-6 h-6" />
+              <div className="flex flex-col items-center justify-center min-h-[60vh] text-center space-y-8">
+                <div className="space-y-2">
+                  <h1 className="text-2xl sm:text-3xl font-medium tracking-tight text-[#f3f3ee]">
+                    Where knowledge begins
+                  </h1>
+                  <p className="text-xs text-neutral-500">
+                    Ask anything, analyze data, or generate ideas.
+                  </p>
                 </div>
-                <h1 className="text-3xl sm:text-4xl font-semibold text-white tracking-tight">
-                  Where knowledge begins
-                </h1>
-                <p className="text-sm text-neutral-500 max-w-md leading-relaxed">
-                  Ask any question, explore ideas, or research anything with real-time AI.
-                </p>
+
+                {/* Hero Input Box */}
+                <div className="w-full max-w-xl">
+                  <div className="relative rounded-2xl bg-[#202222] border border-white/[0.08] p-3 shadow-xl focus-within:border-white/[0.18] transition-all">
+                    <textarea
+                      rows={2}
+                      value={inputText}
+                      onChange={(e) => setInputText(e.target.value)}
+                      onKeyDown={handleKeyDown}
+                      placeholder="Ask anything..."
+                      className="w-full bg-transparent text-sm text-[#f0f0ee] placeholder-neutral-500 focus:outline-none resize-none pr-10"
+                    />
+                    <div className="flex items-center justify-between pt-1">
+                      <div className="flex items-center gap-1.5 text-neutral-500 text-[11px]">
+                        <Sparkles className="w-3.5 h-3.5 text-teal-400" />
+                        <span>Pro Search</span>
+                      </div>
+
+                      <button
+                        onClick={() => handleSubmit()}
+                        disabled={!inputText.trim() || loading}
+                        className={`w-7 h-7 rounded-full flex items-center justify-center transition-all ${
+                          inputText.trim() && !loading
+                            ? "bg-white text-black hover:opacity-90 cursor-pointer shadow-sm"
+                            : "bg-white/[0.06] text-neutral-600 cursor-not-allowed"
+                        }`}
+                      >
+                        <ArrowUp className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Suggestion Chips */}
+                  <div className="flex flex-wrap items-center justify-center gap-2 mt-4">
+                    {heroSuggestions.map((item, idx) => {
+                      const Icon = item.icon;
+                      return (
+                        <button
+                          key={idx}
+                          onClick={() => handleSubmit(item.query)}
+                          className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/[0.03] hover:bg-white/[0.06] border border-white/[0.05] text-[11px] text-neutral-400 hover:text-neutral-200 transition-all cursor-pointer"
+                        >
+                          <Icon className="w-3 h-3 text-neutral-500" />
+                          <span>{item.label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
               </div>
             ) : (
-              /* MESSAGES LIST: Render user & AI bubbles */
+              /* MESSAGES STREAM: Clean document-like layout (Perplexity / ChatGPT style) */
               messages.map((msg, index) => {
                 const isUser = msg.role === "user";
                 return (
                   <div
                     key={msg._id || index}
-                    className={`flex gap-3 ${
-                      isUser ? "justify-end" : "justify-start"
-                    }`}
+                    className="w-full space-y-2 animate-fade-in"
                   >
-                    {/* Bot Avatar Icon */}
-                    {!isUser && (
-                      <div className="w-7 h-7 rounded-lg bg-lime-400/10 border border-lime-400/30 flex items-center justify-center text-lime-400 shrink-0 mt-0.5">
-                        <Bot className="w-4 h-4" />
+                    {isUser ? (
+                      <div className="flex justify-end">
+                        <div className="max-w-xl rounded-2xl bg-white/[0.06] px-4 py-2.5 text-sm text-[#f0f0ee] leading-relaxed">
+                          <p className="whitespace-pre-wrap">{msg.content}</p>
+                        </div>
                       </div>
-                    )}
-
-                    {/* Message Bubble */}
-                    <div
-                      className={`max-w-2xl rounded-2xl px-4 py-3 text-sm leading-relaxed ${
-                        isUser
-                          ? "bg-neutral-800 text-white rounded-tr-xs"
-                          : "bg-[#141416] border border-neutral-800/90 text-neutral-200 rounded-tl-xs shadow-sm"
-                      }`}
-                    >
-                      <p className="whitespace-pre-wrap">{msg.content}</p>
-                    </div>
-
-                    {/* User Avatar Icon */}
-                    {isUser && (
-                      <div className="w-7 h-7 rounded-lg bg-neutral-800 border border-neutral-700 flex items-center justify-center text-neutral-300 shrink-0 mt-0.5">
-                        <User className="w-4 h-4" />
+                    ) : (
+                      <div className="flex gap-3 text-sm text-[#d4d4d0] leading-relaxed pt-2">
+                        <div className="w-full space-y-2">
+                          <div className="flex items-center gap-2 text-xs font-medium text-neutral-400 pb-1">
+                            <span className="text-teal-400 flex items-center gap-1">
+                              <Compass className="w-3.5 h-3.5" /> Answer
+                            </span>
+                          </div>
+                          
+                          <div className="prose prose-invert max-w-none text-sm text-[#d8d8d4] space-y-3 
+                            [&_p]:leading-relaxed [&_p]:mb-3 
+                            [&_pre]:bg-[#141515] [&_pre]:p-3.5 [&_pre]:rounded-xl [&_pre]:border [&_pre]:border-white/[0.06] [&_pre]:overflow-x-auto [&_pre]:my-3
+                            [&_code]:bg-white/[0.06] [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:rounded-md [&_code]:text-neutral-200 [&_code]:font-mono [&_code]:text-[12px]
+                            [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:space-y-1
+                            [&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:space-y-1
+                            [&_h1]:text-lg [&_h1]:font-semibold [&_h1]:text-white [&_h1]:mt-4
+                            [&_h2]:text-base [&_h2]:font-semibold [&_h2]:text-white [&_h2]:mt-3
+                            [&_h3]:text-sm [&_h3]:font-semibold [&_h3]:text-white [&_h3]:mt-2
+                            [&_blockquote]:border-l-2 [&_blockquote]:border-teal-400/50 [&_blockquote]:pl-3 [&_blockquote]:italic [&_blockquote]:text-neutral-400"
+                          >
+                            <ReactMarkdown>{msg.content}</ReactMarkdown>
+                          </div>
+                        </div>
                       </div>
                     )}
                   </div>
@@ -239,51 +294,54 @@ const Dashboard = () => {
               })
             )}
 
-            {/* Loading Indicator while AI is generating response */}
+            {/* Subtle Loading Pulse */}
             {loading && (
-              <div className="flex items-center gap-3 text-neutral-400 text-xs pl-2">
-                <div className="w-7 h-7 rounded-lg bg-lime-400/10 border border-lime-400/30 flex items-center justify-center text-lime-400">
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                </div>
-                <span>Thinking...</span>
+              <div className="flex items-center gap-2 text-xs text-neutral-500 animate-pulse pt-2">
+                <div className="w-1.5 h-1.5 rounded-full bg-teal-400"></div>
+                <span>Searching and reasoning...</span>
               </div>
             )}
+
+            <div ref={messagesEndRef} />
           </div>
         </div>
 
-        {/* =========================================================================
-            3. BOTTOM FLOATING INPUT BAR
-           ========================================================================= */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6 bg-linear-to-t from-[#0b0b0c] via-[#0b0b0c]/90 to-transparent">
-          <div className="max-w-3xl mx-auto">
-            <form
-              onSubmit={handleSubmit}
-              className="flex items-center gap-2 bg-[#141416] border border-neutral-800 rounded-2xl px-4 py-2.5 focus-within:border-lime-500/60 shadow-2xl transition-all"
-            >
-              <input
-                type="text"
-                value={inputText}
-                onChange={(e) => setInputText(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="Ask anything..."
-                className="flex-1 bg-transparent text-sm text-white placeholder-neutral-500 focus:outline-none"
-              />
-
-              <button
-                type="submit"
-                disabled={!inputText.trim() || loading}
-                className={`p-2 rounded-xl transition-all ${
-                  inputText.trim() && !loading
-                    ? "bg-lime-400 text-neutral-950 font-medium hover:bg-lime-300 cursor-pointer shadow-md shadow-lime-400/20"
-                    : "bg-neutral-800 text-neutral-600 cursor-not-allowed"
-                }`}
-                title="Send message"
+        {/* BOTTOM INPUT BAR (Visible when in conversation) */}
+        {messages.length > 0 && (
+          <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6 bg-gradient-to-t from-[#191a1a] via-[#191a1a]/95 to-transparent pointer-events-none">
+            <div className="max-w-2xl mx-auto pointer-events-auto">
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  handleSubmit();
+                }}
+                className="flex items-center gap-2 bg-[#202222] border border-white/[0.08] rounded-2xl px-3.5 py-2 shadow-2xl focus-within:border-white/[0.18] transition-all"
               >
-                <Send className="w-4 h-4" />
-              </button>
-            </form>
+                <input
+                  type="text"
+                  value={inputText}
+                  onChange={(e) => setInputText(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder="Ask a follow-up..."
+                  className="flex-1 bg-transparent text-sm text-[#f0f0ee] placeholder-neutral-500 focus:outline-none"
+                />
+
+                <button
+                  type="submit"
+                  disabled={!inputText.trim() || loading}
+                  className={`w-7 h-7 rounded-full flex items-center justify-center transition-all ${
+                    inputText.trim() && !loading
+                      ? "bg-white text-black hover:opacity-90 cursor-pointer shadow-sm"
+                      : "bg-white/[0.06] text-neutral-600 cursor-not-allowed"
+                  }`}
+                  title="Send message"
+                >
+                  <ArrowUp className="w-4 h-4" />
+                </button>
+              </form>
+            </div>
           </div>
-        </div>
+        )}
       </main>
     </div>
   );

@@ -1,17 +1,16 @@
 import { useState } from "react";
-import { Eye, EyeOff, Mail, Lock, ArrowRight } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
-import {useAuth} from '../hook/useAuth'
+import { Eye, EyeOff, Compass, ArrowRight } from "lucide-react";
+import { Link, useNavigate, Navigate } from "react-router-dom";
+import { useAuth } from "../hook/useAuth";
 import { useSelector } from "react-redux";
-import { Navigate } from "react-router-dom";
 
 export default function LoginPage() {
-  const naviagte = useNavigate()
-  const {handleLogin} = useAuth()
-  
-  const user = useSelector(state => state.auth.user)
-  const loading = useSelector(state => state.auth.loading) 
-  
+  const navigate = useNavigate();
+  const { handleLogin } = useAuth();
+
+  const user = useSelector((state) => state.auth.user);
+  const loading = useSelector((state) => state.auth.loading);
+
   const [showPassword, setShowPassword] = useState(false);
   const [loginData, setLoginData] = useState({
     email: "",
@@ -25,109 +24,107 @@ export default function LoginPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    await handleLogin(loginData)
-    naviagte('/')
+    await handleLogin(loginData);
+    navigate("/");
   };
-  
-  if(loading){
-    return <div>Loading...</div>
+
+  if (loading) {
+    return (
+      <div className="min-h-screen w-full bg-[#191a1a] flex items-center justify-center text-xs text-neutral-500">
+        Loading...
+      </div>
+    );
   }
-  if(user){
-      return <Navigate to='/' replace/>
+
+  if (user) {
+    return <Navigate to="/" replace />;
   }
 
   return (
-    <div className="min-h-screen w-full bg-[#0b0b0c] flex items-center justify-center p-4">
-      <div className="relative w-full max-w-sm">
-        <div className="relative rounded-xl border border-neutral-800 bg-[#141416] shadow-xl overflow-hidden">
-          <div className="p-8">
-            <div className="mb-8">
-              <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-lime-400 to-emerald-500 mb-5" />
-              <h1 className="text-xl font-semibold text-white tracking-tight">
-                Welcome back
-              </h1>
-              <p className="text-neutral-500 text-sm mt-1">
-                Sign in to continue to your dashboard
-              </p>
+    <div className="min-h-screen w-full bg-[#191a1a] text-[#e8e8e6] flex flex-col items-center justify-center p-4 selection:bg-neutral-800">
+      <div className="w-full max-w-xs space-y-6">
+        {/* Brand Header */}
+        <div className="flex flex-col items-center text-center space-y-2">
+          <Link to="/" className="flex items-center gap-2 text-white hover:opacity-80 transition-opacity">
+            <Compass className="w-5 h-5 text-teal-400" />
+            <span className="text-sm font-semibold tracking-tight">perplexity</span>
+          </Link>
+          <h1 className="text-xl font-medium tracking-tight text-[#f3f3ee] pt-2">
+            Welcome back
+          </h1>
+          <p className="text-xs text-neutral-500">
+            Sign in to access your threads & history
+          </p>
+        </div>
+
+        {/* Card Form */}
+        <div className="rounded-2xl bg-[#202222] border border-white/10 p-6 shadow-2xl">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-1.5">
+              <label className="text-[11px] font-medium text-neutral-400">
+                Email
+              </label>
+              <input
+                type="email"
+                name="email"
+                value={loginData.email}
+                onChange={handleChange}
+                placeholder="name@example.com"
+                required
+                className="w-full rounded-xl bg-white/5 border border-white/10 px-3.5 py-2 text-xs text-[#f0f0ee] placeholder-neutral-500 focus:outline-none focus:border-white/20 transition-colors"
+              />
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-xs font-medium text-neutral-400 mb-1.5">
-                  Email
-                </label>
-                <div className="relative">
-                  <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-600" />
-                  <input
-                    type="email"
-                    name="email"
-                    value={loginData.email}
-                    onChange={handleChange}
-                    placeholder="you@example.com"
-                    required
-                    className="w-full bg-[#1c1c1f] border border-neutral-800 rounded-lg pl-10 pr-4 py-2.5 text-sm text-white placeholder-neutral-600 focus:outline-none focus:ring-1 focus:ring-lime-500 focus:border-lime-500 transition-all"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium text-neutral-400 mb-1.5">
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between">
+                <label className="text-[11px] font-medium text-neutral-400">
                   Password
                 </label>
-                <div className="relative">
-                  <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-600" />
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    name="password"
-                    value={loginData.password}
-                    onChange={handleChange}
-                    placeholder="••••••••"
-                    required
-                    className="w-full bg-[#1c1c1f] border border-neutral-800 rounded-lg pl-10 pr-10 py-2.5 text-sm text-white placeholder-neutral-600 focus:outline-none focus:ring-1 focus:ring-lime-500 focus:border-lime-500 transition-all"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword((s) => !s)}
-                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-neutral-600 hover:text-lime-400 transition-colors"
-                  >
-                    {showPassword ? (
-                      <EyeOff className="w-4 h-4" />
-                    ) : (
-                      <Eye className="w-4 h-4" />
-                    )}
-                  </button>
-                </div>
               </div>
-
-              <div className="flex justify-end">
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  name="password"
+                  value={loginData.password}
+                  onChange={handleChange}
+                  placeholder="••••••••"
+                  required
+                  className="w-full rounded-xl bg-white/5 border border-white/10 pl-3.5 pr-9 py-2 text-xs text-[#f0f0ee] placeholder-neutral-500 focus:outline-none focus:border-white/20 transition-colors"
+                />
                 <button
                   type="button"
-                  className="text-xs text-neutral-500 hover:text-lime-400 transition-colors"
+                  onClick={() => setShowPassword((s) => !s)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-500 hover:text-neutral-300 transition-colors"
                 >
-                  Forgot password?
+                  {showPassword ? (
+                    <EyeOff className="w-3.5 h-3.5" />
+                  ) : (
+                    <Eye className="w-3.5 h-3.5" />
+                  )}
                 </button>
               </div>
+            </div>
 
-              <button
-                type="submit"
-                className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-lime-500 to-emerald-500 hover:brightness-110 text-neutral-950 font-medium py-2.5 rounded-lg transition-all duration-200"
-              >
-                Sign In
-                <ArrowRight className="w-4 h-4" />
-              </button>
-            </form>
-
-            <p className="text-center text-xs text-neutral-500 mt-6">
-              Don't have an account?{" "}
-              <Link
-                to="/register"
-                className="text-lime-400 hover:text-lime-300 font-medium transition-colors"
-              >
-                Register
-              </Link>
-            </p>
-          </div>
+            <button
+              type="submit"
+              className="w-full flex items-center justify-center gap-1.5 mt-2 py-2 rounded-xl bg-white text-neutral-950 hover:bg-neutral-200 text-xs font-medium transition-colors cursor-pointer shadow-sm"
+            >
+              <span>Continue</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </form>
         </div>
+
+        {/* Footer info */}
+        <p className="text-center text-xs text-neutral-500">
+          Don't have an account?{" "}
+          <Link
+            to="/register"
+            className="text-neutral-300 hover:text-white font-medium underline underline-offset-4 transition-colors"
+          >
+            Sign up
+          </Link>
+        </p>
       </div>
     </div>
   );
