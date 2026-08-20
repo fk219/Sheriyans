@@ -44,33 +44,28 @@ const client = tavily({
 /**
  * Searches the web for a given query and returns formatted results + sources.
  * 
- * @param {string} query - The search query term.
+ * @param {string|Object} query - The search query term (can be string or { query: string }).
  * 
  * @example
- * // 1. EXAMPLE INPUT DATA:
- * const query = "Who won the latest football match yesterday?";
+ * // 1. INPUT DATA:
+ * // searchInternet("latest tech news") OR searchInternet({ query: "latest tech news" })
  * 
- * // 2. HOW TAVILY PROCESSES IT:
- * // Tavily queries search engines, parses live websites, and strips HTML.
+ * // 2. DATA FLOW & TAVILY CALL:
+ * // Takes the search string -> Calls Tavily Search API with `queryText` -> Gets web results
  * 
- * // 3. EXAMPLE RETURNED DATA (JSON string):
+ * // 3. RETURNED RESPONSE FORMAT (JSON string):
  * // {
  * //   "results": [
- * //     {
- * //       "title": "Match Summary - August 2026",
- * //       "url": "https://sports.example.com/match-123",
- * //       "content": "Real Madrid secured a 2-1 victory...",
- * //       "score": 0.98
- * //     }
+ * //     { "title": "...", "url": "https://...", "content": "..." }
  * //   ],
  * //   "sources": [
- * //     { "title": "Match Summary - August 2026", "url": "https://sports.example.com/match-123" }
+ * //     { "title": "...", "url": "https://..." }
  * //   ]
  * // }
  * 
  * @returns {Promise<string>} JSON string representation of search results and sources.
  */
-const searchInternet = async ({query}) => {
+const searchInternet = async (queryInput) => {
     // Check if API key is configured
     if (!process.env.TAVILY_API_KEY) {
         console.warn("⚠️ TAVILY_API_KEY is not set in environment variables. Web search will not work.");
@@ -81,7 +76,21 @@ const searchInternet = async ({query}) => {
         });
     }
 
+    // Handle both cases: queryInput passed as a string OR as an object { query: "..." }
+    const query = typeof queryInput === 'object' && queryInput !== null
+        ? queryInput.query
+        : queryInput;
+
+    if (!query || typeof query !== 'string') {
+        return JSON.stringify({
+            error: "Search query must be a valid non-empty string.",
+            results: [],
+            sources: []
+        });
+    }
+
     try {
+        // Tavily expects: client.search("query string", options)
         const searchResult = await client.search(query, {
             maxResults: 5,
             searchDepth: "basic"
