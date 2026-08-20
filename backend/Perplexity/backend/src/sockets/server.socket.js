@@ -46,13 +46,29 @@ import { messageModel } from "../models/message.model.js";
 let io;
 
 /**
+ * Origins allowed to connect over WebSocket.
+ * IMPORTANT: We CANNOT use `origin: "*"` here. The frontend connects with
+ * `withCredentials: true` (cookies in handshake), and browsers REFUSE wildcard
+ * origins in CORS when credentials are included — that is exactly the
+ * "Access-Control-Allow-Origin must not be the wildcard '*'" error you saw.
+ * These MUST match the origins in app.js (Express/CORS) exactly.
+ */
+const ALLOWED_ORIGINS = [
+  "https://scaling-waddle-q5v7p6gvxj73wrx-5173.app.github.dev", // GitHub Codespaces (dev)
+  "http://localhost:5173"                                       // local Vite dev
+];
+
+/**
  * Attaches Socket.IO to the provided HTTP server.
  *
  * @param {import('http').Server} httpServer - The Node http.Server from server.js.
  */
 const socketInit = (httpServer) => {
   io = new Server(httpServer, {
-    cors: { origin: "*" } // allows the frontend to connect
+    cors: {
+      origin: ALLOWED_ORIGINS, // explicit list, NOT "*" (required for credentials)
+      credentials: true        // allow cookies to travel with the handshake
+    }
   });
 
   // Runs once for EVERY new browser tab/device that opens the app

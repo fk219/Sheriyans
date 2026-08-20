@@ -54,7 +54,11 @@ const initializeSocketConnection = (dispatch) => {
   if (socket) return socket;
 
   socket = io(SOCKET_URL, {
-    withCredentials: true
+    // NOTE: We do NOT set `withCredentials: true` here. The browser forbids a
+    // CORS wildcard origin ("*") when credentials are included — that was the
+    // "Access-Control-Allow-Origin must not be the wildcard" error. The socket
+    // stream needs no auth cookies (auth happens on the REST calls), so we keep
+    // this credential-free = always CORS-safe regardless of server config.
   });
 
   // Connection lifecycle logs
