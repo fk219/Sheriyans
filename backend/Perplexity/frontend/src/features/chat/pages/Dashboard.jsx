@@ -92,6 +92,7 @@ const Dashboard = () => {
   const chats = useSelector((state) => state.chat.chats);
   const currentChatId = useSelector((state) => state.chat.currentChatId);
   const loading = useSelector((state) => state.chat.loading);
+  const error = useSelector((state) => state.chat.error);
 
   // DERIVED DATA:
   // Convert dictionary object { id1: {...}, id2: {...} } into an array for rendering in sidebar list
@@ -470,6 +471,16 @@ const Dashboard = () => {
               <div className="flex items-center gap-2 text-xs text-neutral-500 animate-pulse pt-2">
                 <div className="w-1.5 h-1.5 rounded-full bg-teal-400"></div>
                 <span>Searching and reasoning...</span>
+              </div>
+            )}
+
+            {/* ERROR BANNER (Visible whenever a request/socket stream fails)
+                Without this, failures were INVISIBLE and it looked like the AI
+                never answered. Shows the exact server error from Redux. */}
+            {error && (
+              <div className="flex items-center gap-2 text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2 pt-2">
+                <span>AI request failed:</span>
+                <span className="truncate">{error}</span>
               </div>
             )}
 

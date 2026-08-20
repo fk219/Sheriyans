@@ -98,9 +98,11 @@ const getMessages = async (req, res) => {
     }
 
 
+    // IMPORTANT: sort by createdAt so the chat thread always renders in
+    // chronological order (user -> AI -> user -> AI ...) and never jumbled
     const messages = await messageModel.find({
         chat: chatId
-    })
+    }).sort({createdAt: 1})
 
     return res.status(200).json({
         message: "Messages Fetched Succeesully",

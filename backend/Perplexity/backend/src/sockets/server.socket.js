@@ -102,6 +102,20 @@ const socketInit = (httpServer) => {
           .find({ chat: chatId })
           .sort({ createdAt: 1 });
 
+        // =====================================================================
+        // MISTRAL ORDER GUARD (fixes the "got assistant" 400 error)
+        // =====================================================================
+        // Mistral's API REQUIRES the last message in history to be a USER (or
+        // tool-result) message. If the DB somehow has a trailing orphan AI
+        // message (e.g. a leftover from an older flow), Mistral rejects the
+        // whole request with: "Expected last role User or Tool... got assistant".
+        // We pop those trailing AI messages from the PROMPT ONLY (the DB data
+        // is untouched) so the chat always ends on a user message.
+        while (chatHistory.length > 0
+          && chatHistory[chatHistory.length - 1].role === "ai") {
+          chatHistory.pop();
+        }
+
         // Stream the answer. Every token arrives via the `onChunk` callback.
         const fullAnswer = await generateResponse(chatHistory, (chunk) => {
           // TODO: send only to THIS socket (single-user demo keeps it simple)
