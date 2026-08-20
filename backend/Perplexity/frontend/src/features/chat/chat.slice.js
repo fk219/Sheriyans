@@ -121,6 +121,83 @@ const chatSlice = createSlice({
 
         /**
          * --------------------------------------------------------------------
+         * 2.5 appendAiChunk  (NEW: powers the live Socket.IO typing effect)
+         * --------------------------------------------------------------------
+         * PURPOSE:
+         * Appends ONE incoming token/chunk from the AI to the current "typing"
+         * message. This is fired on EVERY `ai_typing` socket event, so the
+         * answer appears word-by-word live in the chat window.
+         * 
+         * WHEN IS IT DISPATCHED?
+         * - Every time the backend streams `ai_typing { chatId, chunk }`.
+         * 
+         * SAMPLE ACTION PAYLOAD:
+         * {
+         *   chatId: "66a012bc394a8f10",
+         *   chunk: "Paris"
+         * }
+         * 
+         * WHAT IT DOES TO STATE:
+         * - If the LAST message is already a live AI "streaming" message, we
+         *   just concatenate the new chunk onto it.
+         * - Otherwise (fresh AI turn), we create a new temporary message with
+         *   `streaming: true` and start it off with this first chunk.
+         * 
+         * SAMPLE STATE BEFORE:
+         * messages: [ { role:"user", content:"Top Paris attractions?" } ]
+         * 
+         * SAMPLE STATE AFTER (three chunks "Paris", " is", " great"):
+         * messages: [
+         *   { role:"user", content:"Top Paris attractions?" },
+         *   { role:"ai", content:"Paris is great", streaming: true }
+         * ]
+         */
+        appendAiChunk: (state, action) => {
+            const { chatId, chunk } = action.payload
+            const chat = state.chats[chatId]
+            if (!chat) return
+
+            const last = chat.messages[chat.messages.length - 1]
+            if (last && last.role === "ai" && last.streaming) {
+                last.content += chunk
+            } else {
+                chat.messages.push({ role: "ai", content: chunk, streaming: true })
+            }
+        },
+
+        /**
+         * --------------------------------------------------------------------
+         * 2.6 finalizeAiMessage  (NEW: replaces temp bubble with saved message)
+         * --------------------------------------------------------------------
+         * PURPOSE:
+         * Called when the backend emits `ai_done`. The AI answer is finished
+         * and has been saved to MongoDB — we swap the temporary streaming
+         * message for the real saved message (which has a proper _id).
+         * 
+         * WHEN IS IT DISPATCHED?
+         * - When the `ai_done { chatId, message }` socket event arrives.
+         * 
+         * SAMPLE ACTION PAYLOAD:
+         * {
+         *   chatId: "66a012bc394a8f10",
+         *   message: { _id: "msg_9", role: "ai", content: "Paris is great", chat: "66a..." }
+         * }
+         */
+        finalizeAiMessage: (state, action) => {
+            const { chatId, message } = action.payload
+            const chat = state.chats[chatId]
+            if (!chat) return
+
+            const idx = chat.messages.findIndex((m) => m.streaming)
+            if (idx !== -1) {
+                chat.messages[idx] = { ...message, streaming: false }
+            } else {
+                chat.messages.push(message)
+            }
+        },
+
+        /**
+         * --------------------------------------------------------------------
          * 3. setMessages
          * --------------------------------------------------------------------
          * PURPOSE:
@@ -221,6 +298,8 @@ const chatSlice = createSlice({
 export const {
     createNewChat,
     addNewMessage,
+    appendAiChunk,
+    finalizeAiMessage,
     setMessages,
     setChats,
     setCurrentChatId,

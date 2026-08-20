@@ -1,6 +1,6 @@
 import { useDispatch } from 'react-redux'
 import { sendMessage, getChats, getMessages } from '../service/chat.api'
-import { initializeSocketConnection } from '../service/chat.socket'
+import { initializeSocketConnection as initSocket, askAi } from '../service/chat.socket'
 
 import {
     createNewChat,
@@ -27,10 +27,12 @@ import {
  *    - DATA FROM BACKEND: 
  *        • `getChats()` -> Fetches array of all user chat sessions from MongoDB (`GET /api/chats`).
  *        • `getMessages(chatId)` -> Fetches messages array of selected chat from MongoDB (`GET /api/chats/:chatId/messages`).
- *        • `sendMessage({ message, chatId })` -> Sends prompt to AI + backend, receives saved user & AI messages (`POST /api/chats/message`).
+ *        • `sendMessage({ message, chatId, stream: true })` -> Creates/updates chat + saves the USER message
+ *          and returns the real chatId instantly (`POST /api/chats/message`).
+ *        • WebSocket ("ask_ai" -> "ai_typing" / "ai_done") -> Streams the AI answer live token-by-token.
  *    - DISPATCH TO REDUX STORE: Updates `state.chat.chats`, `state.chat.currentChatId`, `state.chat.loading`, `state.chat.error`.
  * 
- * 3. COMPLETE DATA FLOW DIAGRAM:
+ * 3. COMPLETE DATA FLOW DIAGRAM (LIVE STREAMING):
  *    [Dashboard.jsx UI]
  *           │
  *           ├──► User types prompt & clicks send
@@ -39,20 +41,30 @@ import {
  *    [useChat Hook (handleSendMessage)]
  *           │
  *           ├──► 1. Dispatch `setLoading(true)` (UI shows loading indicator)
- *           ├──► 2. Optimistic UI: Dispatch `addNewMessage` (User sees prompt immediately without waiting)
- *           ├──► 3. Call `sendMessage()` API in `chat.api.js`
- *           │            │
- *           │            ▼ (HTTP POST)
- *           │       [Backend Express Server -> Google Gemini AI -> MongoDB]
- *           │            │
- *           │            ▼ (HTTP Response JSON)
- *           ├──► 4. Receive backend response: { title, newChat, userMessage, aiMessage }
- *           ├──► 5. Dispatch `createNewChat` / `setMessages` / `addNewMessage` (Replaces temp data with real MongoDB IDs)
- *           └──► 6. Dispatch `setLoading(false)` (Turn off spinner)
+ *           ├──► 2. Optimistic UI: Dispatch `addNewMessage` (User sees prompt immediately)
+ *           ├──► 3. Call `sendMessage({..., stream: true })` API in `chat.api.js`
+ *           │            ▼ (HTTP POST, returns FAST)
+ *           │       Backend creates chat + saves USER message -> returns { newChat, userMessage }
+ *           ├──► 4. Dispatch `createNewChat` / `setMessages` (real MongoDB ids replace "temp")
+ *           ├──► 5. `askAi(chatId)` emits "ask_ai" over Socket.IO
+ *           │            ▼
+ *           │       Backend streams Mistral tokens -> "ai_typing { chatId, chunk }"
+ *           │            ▼
+ *           ├──► 6. Redux `appendAiChunk` -> UI shows live typing text
+ *           ├──► 7. Backend saves full answer -> emits "ai_done { chatId, message }"
+ *           └──► 8. Redux `finalizeAiMessage` + `setLoading(false)`
  */
 const useChat = () => {
     // Redux dispatch hook used to send actions and update global Redux state
     const dispatch = useDispatch()
+
+    /**
+     * Opens the WebSocket connection and wires its event handlers to `dispatch`.
+     * Exposed to Dashboard so it can call `initializeSocketConnection()` on mount.
+     */
+    const initializeSocketConnection = () => {
+        initSocket(dispatch)
+    }
 
     /**
      * ------------------------------------------------------------------------
@@ -75,13 +87,18 @@ const useChat = () => {
      *   chatId: "66a012bc394a8f10" // or null for new chat
      * }
      * 
-     * SAMPLE BACKEND RESPONSE DATA:
+     * SAMPLE BACKEND RESPONSE (stream mode):
      * {
      *   title: "JavaScript Recursion",
      *   newChat: { _id: "66a012bc394a8f10", title: "JavaScript Recursion", user: "66a00f12..." },
      *   userMessage: { _id: "m_001", role: "user", content: "Explain recursion...", chat: "66a012bc394a8f10" },
-     *   aiMessage: { _id: "m_002", role: "ai", content: "Recursion is when a function calls itself...", chat: "66a012bc394a8f10" }
+     *   chatId: "66a012bc394a8f10",
+     *   stream: true     // means: the AI answer is streamed via Socket.IO
      * }
+     * 
+     * AFTER THE RESPONSE, THE AI ANSWER ARRIVES LIVE VIA SOCKETS:
+     *   "ai_typing" { chatId, chunk: "Recursion " }  (repeated, word by word)
+     *   "ai_done"   { chatId, message: { _id: "m_002", role:"ai", content:"Recursion is when..." } }
      */
     const handleSendMessage = async ({ message, chatId }) => {
         try {
@@ -107,10 +124,15 @@ const useChat = () => {
                 dispatch(setCurrentChatId("temp"))
             }
 
-            // Line: Call HTTP API service layer to trigger backend controller & Gemini AI
-            const data = await sendMessage({ message, chatId })
+            // Line: Call HTTP API with `stream: true` — the backend ONLY creates
+            // the chat + saves the user message, then returns instantly. This
+            // avoids the long blocking call; the AI answer comes via WebSocket.
+            const data = await sendMessage({ message, chatId, stream: true })
 
-            // Line: Check if backend created a brand new chat session document
+            // Determine the REAL chat id the AI stream belongs to
+            let streamChatId = chatId
+
+            // Line: If backend created a brand new chat session document
             if (data.newChat) {
                 // Line: Register the new chat title and MongoDB _id in Redux sidebar list
                 dispatch(createNewChat({
@@ -118,31 +140,35 @@ const useChat = () => {
                     title: data.title || data.newChat.title
                 }))
 
-                // Line: Replace temporary optimistic message with official saved MongoDB messages (user + AI)
+                // Line: Replace temporary optimistic chat with the official saved user message
                 dispatch(setMessages({
                     chatId: data.newChat._id,
-                    messages: [data.userMessage, data.aiMessage]
+                    messages: [data.userMessage]
                 }))
 
                 // Line: Switch active chat pointer from "temp" to real MongoDB _id
                 dispatch(setCurrentChatId(data.newChat._id))
-            } else {
-                // Line: If continuing an existing thread, append only the new AI reply message
-                if (data.aiMessage) {
-                    dispatch(addNewMessage({
-                        chatId: activeChatId,
-                        message: data.aiMessage
-                    }))
-                }
+
+                // The AI stream will arrive under this new chat id
+                streamChatId = data.newChat._id
+            }
+
+            // Line: Start the Socket.IO live stream for this chat.
+            // Loading stays ON until the backend emits "ai_done" or "ai_error".
+            const sent = askAi(streamChatId)
+            if (!sent) {
+                dispatch(setError("WebSocket not connected. Please refresh."))
+                dispatch(setLoading(false))
             }
         } catch (err) {
             // Line: Log error in browser console and store error message in Redux for UI notification
             console.error("Failed to send message:", err)
             dispatch(setError(err?.response?.data?.error || err.message))
-        } finally {
-            // Line: Turn off loading state regardless of whether request succeeded or failed
+            // Line: Turn off loading since we won't get a socket event in this case
             dispatch(setLoading(false))
         }
+        // NOTE: NO `finally { dispatch(setLoading(false)) }` here — loading must
+        // stay true while the AI streams, and gets turned off by "ai_done"/"ai_error".
     }
 
     /**
