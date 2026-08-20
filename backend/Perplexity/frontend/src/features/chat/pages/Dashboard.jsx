@@ -19,36 +19,54 @@ import { setCurrentChatId } from "../chat.slice";
 
 /**
  * ============================================================================
- * ARCHITECTURE LAYER 4: VIEW / UI COMPONENT (Dashboard.jsx)
+ * ARCHITECTURE LAYER 4: VIEW / UI COMPONENT LAYER (Dashboard.jsx)
  * ============================================================================
  * 
- * WHAT IS THIS COMPONENT?
- * This is the primary user interface of the Perplexity clone.
- * It contains:
- * 1. Left Sidebar: Displays all previous chat conversations and "+ New Thread" button.
- * 2. Hero Section: Clean search bar + suggestion chips (shown when no chat is active / 0 messages).
- * 3. Conversation Feed: Markdown-rendered AI responses and user message bubbles.
- * 4. Fixed Bottom Input Bar: Allows asking follow-up questions in an ongoing conversation.
+ * 1. WHAT IS THIS COMPONENT?
+ *    - The main visual user interface (UI) for the Perplexity-style AI application.
+ *    - Renders the sidebar (previous chats library), the hero screen (landing page),
+ *      the live conversation stream (User bubble + AI Markdown response), and input controls.
  * 
- * ----------------------------------------------------------------------------
- * HOW DASHBOARD INTERACTS WITH HOOKS, REDUX, AND API:
- * ----------------------------------------------------------------------------
- * 1. READ DATA (Redux -> Dashboard):
- *    - `useSelector((state) => state.chat.chats)` -> Gets all chat threads.
- *    - `useSelector((state) => state.chat.currentChatId)` -> Gets which chat is active.
- *    - `useSelector((state) => state.chat.loading)` -> Tells UI if AI is currently thinking.
+ * 2. WHERE DOES DATA COME FROM & WHERE IS IT SHOWN?
+ *    - `useSelector((state) => state.chat.chats)`:
+ *        • Comes from: Redux store (populated initially by `handleGetChats()` via backend MongoDB `GET /api/chats`).
+ *        • Used in: Left sidebar map to display the list of all user chat sessions.
+ *        • Sample data shape:
+ *          {
+ *            "66a012bc394a8f10": { _id: "66a012bc394a8f10", title: "What is Node.js?", messages: [...] },
+ *            "66a099ef412b1234": { _id: "66a099ef412b1234", title: "React State Management", messages: [...] }
+ *          }
  * 
- * 2. WRITE/TRIGGER ACTIONS (Dashboard -> useChat Hook):
- *    - `useEffect` -> Calls `handleGetChats()` to fetch past chats on mount.
- *    - User clicks sidebar item -> Calls `handleOpenChats(chatId)` to load messages.
- *    - User submits prompt -> Calls `handleSendMessage({ message, chatId })`.
- *    - User clicks "+ New Thread" -> Dispatches `setCurrentChatId(null)` to reset view.
+ *    - `useSelector((state) => state.chat.currentChatId)`:
+ *        • Comes from: Redux store (tracks currently selected chat ID, e.g. "66a012bc394a8f10" or null).
+ *        • Used in: Header title, active sidebar item highlight, and determining active conversation messages.
+ * 
+ *    - `activeChat.messages` (Derived from active chat in Redux):
+ *        • Comes from: Redux store (populated by `handleOpenChats` or `handleSendMessage`).
+ *        • Used in: Conversation stream view to render chat history.
+ *        • Sample data shape:
+ *          [
+ *            { _id: "m1", role: "user", content: "Explain closures" },
+ *            { _id: "m2", role: "ai", content: "A closure in JavaScript is..." }
+ *          ]
+ * 
+ *    - `useSelector((state) => state.chat.loading)`:
+ *        • Comes from: Redux store.
+ *        • Used in: Disabling send button and showing animated loading pulse ("Searching and reasoning...").
+ * 
+ * 3. WHAT HAPPENS ON USER INTERACTIONS?
+ *    - Initial Mount: Calls `initializeSocketConnection()` and `handleGetChats()`.
+ *    - Click Sidebar Chat: Calls `handleOpenChats(chat._id)` to load message thread via Route Param `/api/chats/:chatId/messages`.
+ *    - Submit Question: Calls `handleSendMessage({ message, chatId })` -> optimistic update -> sends to backend API.
+ *    - Click "+ New Thread": Dispatches `setCurrentChatId(null)` to show clean Hero landing view.
  */
 const Dashboard = () => {
+  // Redux dispatcher to dispatch synchronous actions like setCurrentChatId
   const dispatch = useDispatch();
+  // Ref attached to bottom of chat feed to auto-scroll smoothly on new messages
   const messagesEndRef = useRef(null);
 
-  // Consume functions from Controller Layer (useChat Hook)
+  // Consume controller methods from custom hook layer (useChat)
   const {
     initializeSocketConnection,
     handleSendMessage,
@@ -56,30 +74,32 @@ const Dashboard = () => {
     handleOpenChats,
   } = useChat();
 
-  // Local Component State
+  // Local UI state for toggling sidebar drawer on mobile/desktop
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  // Local state for the text input box (Hero search or bottom follow-up input)
   const [inputText, setInputText] = useState("");
 
-  // Select Global Chat State from Redux Store
+  // Select global chat state from Redux store
   const chats = useSelector((state) => state.chat.chats);
   const currentChatId = useSelector((state) => state.chat.currentChatId);
   const loading = useSelector((state) => state.chat.loading);
 
-  // Derived Data for rendering
-  // 1. Convert dictionary object { id1: {...}, id2: {...} } into an array for .map() in sidebar
+  // DERIVED DATA:
+  // Convert dictionary object { id1: {...}, id2: {...} } into an array for rendering in sidebar list
   const chatList = Object.values(chats || {});
   
-  // 2. Get the active chat object and its messages array
+  // Find currently active chat object using currentChatId key
   const activeChat = currentChatId ? chats[currentChatId] : null;
+  // Get messages array of current active chat with fallback to empty array
   const messages = activeChat?.messages || [];
 
   /**
    * --------------------------------------------------------------------------
-   * 1. INITIAL LOAD (Component Mount)
+   * 1. INITIAL MOUNT EFFECT
    * --------------------------------------------------------------------------
-   * When Dashboard renders for the first time:
+   * Runs once when Dashboard renders:
    * - Connects to WebSocket server.
-   * - Calls backend `GET /api/chats` to populate sidebar threads.
+   * - Fetches user's chat history from backend database to populate sidebar.
    */
   useEffect(() => {
     initializeSocketConnection();
@@ -88,10 +108,9 @@ const Dashboard = () => {
 
   /**
    * --------------------------------------------------------------------------
-   * 2. AUTO-SCROLL TO BOTTOM
+   * 2. AUTO-SCROLL EFFECT
    * --------------------------------------------------------------------------
-   * Whenever new messages arrive or loading state changes, smoothly scroll
-   * the conversation feed to the latest message.
+   * Scrolls to bottom of chat container whenever messages change or loading begins/ends.
    */
   useEffect(() => {
     if (messages.length > 0) {
@@ -103,24 +122,19 @@ const Dashboard = () => {
    * --------------------------------------------------------------------------
    * 3. SUBMIT PROMPT HANDLER
    * --------------------------------------------------------------------------
-   * Called when:
-   * - User presses Enter in input textarea.
-   * - User clicks the Send arrow button.
-   * - User clicks one of the Hero suggestion chips.
+   * Triggers when user clicks Send, presses Enter, or clicks a suggestion chip.
    * 
-   * DATA FLOW:
-   * 1. Clears the input field immediately.
-   * 2. Passes `{ message, chatId: currentChatId }` to `handleSendMessage` in `useChat`.
+   * @param {string|undefined} textToSend - Optional string if clicked from suggestion chip
    */
   const handleSubmit = async (textToSend) => {
     const query = typeof textToSend === "string" ? textToSend : inputText;
     const trimmed = query.trim();
     if (!trimmed || loading) return;
 
-    // Clear input box immediately for smooth UX
+    // Clear input box immediately for smooth responsive feel
     setInputText("");
 
-    // Send question to useChat controller
+    // Forward message and active chatId to controller hook
     await handleSendMessage({
       message: trimmed,
       chatId: currentChatId,
@@ -129,9 +143,9 @@ const Dashboard = () => {
 
   /**
    * --------------------------------------------------------------------------
-   * 4. KEYBOARD SHORTCUTS
+   * 4. KEYBOARD HANDLER
    * --------------------------------------------------------------------------
-   * Allows submitting by pressing "Enter" (Shift + Enter makes a new line).
+   * Allows pressing Enter to submit, while Shift+Enter creates a new line.
    */
   const handleKeyDown = (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -142,16 +156,20 @@ const Dashboard = () => {
 
   /**
    * --------------------------------------------------------------------------
-   * 5. NEW THREAD HANDLER
+   * 5. NEW THREAD & OPEN CHAT HANDLERS
    * --------------------------------------------------------------------------
-   * Resets active chat ID to `null` which brings user back to the Hero search view.
    */
   const handleNewThread = () => {
     dispatch(setCurrentChatId(null));
     setInputText("");
   };
 
-  // Quick suggestion chips for the hero landing screen
+  // Wrapper function to open a chat and pass current chats for message caching check
+  const openChat = (chatId) => {
+    handleOpenChats(chatId, chats);
+  };
+
+  // Predefined suggestion cards for the hero landing screen
   const heroSuggestions = [
     { icon: Globe, label: "Explore trends in artificial intelligence", query: "What are the latest breakthroughs and trends in AI for 2025-2026?" },
     { icon: Code, label: "Write a high-performance React hook", query: "Can you create a custom performant debounce hook in React with TypeScript?" },
@@ -214,7 +232,7 @@ const Dashboard = () => {
                   return (
                     <button
                       key={chat._id}
-                      onClick={() => handleOpenChats(chat._id)}
+                      onClick={() => openChat(chat._id)}
                       className={`w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-xs text-left truncate transition-colors cursor-pointer ${
                         isActive
                           ? "bg-white/8 text-white font-medium"
@@ -348,7 +366,7 @@ const Dashboard = () => {
                         </div>
                       </div>
                     ) : (
-                      /* AI ANSWER (Rendered with ReactMarkdown) */
+                      /* AI ANSWER (Rendered with ReactMarkdown custom components) */
                       <div className="flex gap-3 text-sm text-[#d4d4d0] leading-relaxed pt-2">
                         <div className="w-full space-y-2">
                           <div className="flex items-center gap-2 text-xs font-medium text-neutral-400 pb-1">
@@ -357,18 +375,71 @@ const Dashboard = () => {
                             </span>
                           </div>
                           
-                          <div className="prose prose-invert max-w-none text-sm text-[#d8d8d4] space-y-3 
-                            [&_p]:leading-relaxed [&_p]:mb-3 
-                            [&_pre]:bg-[#141515] [&_pre]:p-3.5 [&_pre]:rounded-xl [&_pre]:border [&_pre]:border-white/6 [&_pre]:overflow-x-auto [&_pre]:my-3
-                            [&_code]:bg-white/6 [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:rounded-md [&_code]:text-neutral-200 [&_code]:font-mono [&_code]:text-[12px]
-                            [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:space-y-1
-                            [&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:space-y-1
-                            [&_h1]:text-lg [&_h1]:font-semibold [&_h1]:text-white [&_h1]:mt-4
-                            [&_h2]:text-base [&_h2]:font-semibold [&_h2]:text-white [&_h2]:mt-3
-                            [&_h3]:text-sm [&_h3]:font-semibold [&_h3]:text-white [&_h3]:mt-2
-                            [&_blockquote]:border-l-2 [&_blockquote]:border-teal-400/50 [&_blockquote]:pl-3 [&_blockquote]:italic [&_blockquote]:text-neutral-400"
-                          >
-                            <ReactMarkdown>{msg.content}</ReactMarkdown>
+                          <div className="text-sm text-[#d8d8d4] leading-relaxed">
+                            <ReactMarkdown
+                              components={{
+                                h1: ({ node, ...props }) => (
+                                  <h1 className="text-lg font-semibold text-white mt-4 mb-2" {...props} />
+                                ),
+                                h2: ({ node, ...props }) => (
+                                  <h2 className="text-base font-semibold text-white mt-3 mb-2" {...props} />
+                                ),
+                                h3: ({ node, ...props }) => (
+                                  <h3 className="text-sm font-semibold text-white mt-2 mb-1" {...props} />
+                                ),
+                                p: ({ node, ...props }) => (
+                                  <p className="leading-relaxed mb-3 text-[#d8d8d4]" {...props} />
+                                ),
+                                ul: ({ node, ...props }) => (
+                                  <ul className="list-disc pl-5 mb-3 space-y-1" {...props} />
+                                ),
+                                ol: ({ node, ...props }) => (
+                                  <ol className="list-decimal pl-5 mb-3 space-y-1" {...props} />
+                                ),
+                                li: ({ node, ...props }) => (
+                                  <li className="leading-relaxed" {...props} />
+                                ),
+                                blockquote: ({ node, ...props }) => (
+                                  <blockquote className="border-l-2 border-teal-400/50 pl-3 my-3 italic text-neutral-400" {...props} />
+                                ),
+                                pre: ({ node, ...props }) => (
+                                  <pre className="bg-[#141515] p-3.5 rounded-xl border border-white/6 overflow-x-auto my-3" {...props} />
+                                ),
+                                code: ({ node, inline, className, children, ...props }) => {
+                                  if (inline) {
+                                    return (
+                                      <code className="bg-white/6 px-1.5 py-0.5 rounded-md text-neutral-200 font-mono text-[12px]" {...props}>
+                                        {children}
+                                      </code>
+                                    );
+                                  }
+                                  return (
+                                    <code className="text-neutral-200 font-mono text-[12px]" {...props}>
+                                      {children}
+                                    </code>
+                                  );
+                                },
+                                a: ({ node, ...props }) => (
+                                  <a className="text-teal-400 hover:underline" target="_blank" rel="noopener noreferrer" {...props} />
+                                ),
+                                table: ({ node, ...props }) => (
+                                  <div className="overflow-x-auto my-3">
+                                    <table className="min-w-full divide-y divide-white/10 text-left text-xs border border-white/6 rounded-lg overflow-hidden" {...props} />
+                                  </div>
+                                ),
+                                th: ({ node, ...props }) => (
+                                  <th className="px-3 py-2 bg-white/5 font-semibold text-white" {...props} />
+                                ),
+                                td: ({ node, ...props }) => (
+                                  <td className="px-3 py-2 border-t border-white/6 text-neutral-300" {...props} />
+                                ),
+                                hr: ({ node, ...props }) => (
+                                  <hr className="border-white/10 my-4" {...props} />
+                                ),
+                              }}
+                            >
+                              {msg.content}
+                            </ReactMarkdown>
                           </div>
                         </div>
                       </div>

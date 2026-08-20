@@ -5,6 +5,8 @@ import { app } from './src/app.js';
 import { connectDB } from './src/config/database.js';
 import { socketInit } from './src/sockets/server.socket.js';
 
+import { searchInternet } from './src/services/internet.service.js';
+
 const port = process.env.PORT || 3000;
 
 const httpServer = http.createServer(app)

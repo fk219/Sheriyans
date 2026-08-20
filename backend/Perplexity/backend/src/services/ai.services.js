@@ -1,23 +1,76 @@
+import * as z from 'zod'
 import { ChatMistralAI } from "@langchain/mistralai";
-import { HumanMessage, AIMessage, SystemMessage } from 'langchain'
+import { HumanMessage, AIMessage, SystemMessage, tool, createAgent } from 'langchain'
+import { searchInternet } from "./internet.service.js";
 
 const model = new ChatMistralAI({
   model: "mistral-small-latest"
 });
 
-const generateResponse = async (messages) => {
-  const response = await model.invoke(messages.map((msg) => {
-    if(msg.role === "user"){
-      return new HumanMessage(msg.content)
-    }else if(msg.role === "ai"){
-      return new AIMessage(msg.content)
+const searchInternetTool = tool(
+    async ({ query }) => {
+      const response = await searchInternet(query);
+      return JSON.stringify(response);
+    },
+    {
+      name: "search_internet",
+      description: "Searches the live web/internet for recent information, real-time facts, news, documentation, or queries that require up-to-date knowledge beyond the model's training data cutoff.",
+      schema: z.object({
+        query: z.string().describe("The search query string to search the web for, e.g. 'latest quantum computing news 2026'")
+      })
     }
-  }))
+);
 
-  return response.text
-}
+const agent = createAgent({
+  model: model,
+  tools: [searchInternetTool]
+})
 
+/**
+ * Generates an AI response for a conversation thread.
+ * 
+ * @param {Array<{ role: 'user' | 'ai', content: string }>} messages - Array of message objects representing the chat history.
+ * 
+ * @example
+ * // Example input data:
+ * const messages = [
+ *   { role: "user", content: "What is the capital of France?" },
+ *   { role: "ai", content: "The capital of France is Paris." },
+ *   { role: "user", content: "What are some top attractions to visit there?" }
+ * ];
+ * 
+ * const response = await generateResponse(messages);
+ * // Returns: "Some top attractions in Paris include the Eiffel Tower, Louvre Museum..."
+ */
+const generateResponse = async (messages) => {
+  const formattedMessages = messages.map((msg) => {
+    if (msg.role === "user") {
+      return new HumanMessage(msg.content);
+    } else if (msg.role === "ai") {
+      return new AIMessage(msg.content);
+    }
+  });
 
+  const response = await agent.invoke({
+    messages: formattedMessages
+  });
+
+  const lastMessage = response.messages[response.messages.length - 1];
+  return lastMessage?.content || "";
+};
+
+/**
+ * Generates a concise title (2-4 words) for a chat conversation based on the initial user message.
+ * 
+ * @param {string} message - The first message or prompt sent by the user.
+ * 
+ * @example
+ * // Example input data:
+ * const message = "Can you help me write a Python script to scrape product prices from Amazon?";
+ * 
+ * const title = await generateTitle(message);
+ * // Returns: "Amazon Price Scraper"
+ */
 const generateTitle = async (message) => {
   const title = await model.invoke([
     new SystemMessage(`
