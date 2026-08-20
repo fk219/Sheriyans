@@ -81,30 +81,21 @@ const agent = createAgent({
 })
 
 /**
- * Generates an AI response for a conversation thread.
+ * Generates and streams an AI response chunk-by-chunk in real time.
  * 
- * @param {Array<{ role: 'user' | 'ai', content: string }>} messages - Array of message objects representing the chat history.
+ * 1. HOW DATA FLOWS:
+ *    - Converts raw MongoDB messages into LangChain classes (HumanMessage, AIMessage).
+ *    - Calls `agent.streamEvents()` which starts Mistral AI and any tools (Tavily search).
+ *    - Every time Mistral AI outputs a new word/token (`on_chat_model_stream`), it calls `onChunk(word)`.
+ *    - Simultaneously accumulates all words into `fullResponse`.
+ *    - Once generation finishes, returns the full string to be saved in MongoDB.
  * 
- * @example
- * // 1. EXAMPLE INPUT DATA:
- * const messages = [
- *   { role: "user", content: "What is the capital of France?" },
- *   { role: "ai", content: "The capital of France is Paris." },
- *   { role: "user", content: "What are some top attractions to visit there today?" }
- * ];
- * 
- * // 2. HOW DATA FLOWS INSIDE:
- * // - `messages` mapped to [HumanMessage, AIMessage, HumanMessage]
- * // - `agent.invoke()` sends conversation to Mistral AI.
- * // - Mistral AI calls `searchInternetTool` if fresh info is needed.
- * 
- * // 3. EXAMPLE OUTPUT:
- * const response = await generateResponse(messages);
- * // Returns: "Some top attractions in Paris include the Eiffel Tower, Louvre Museum..."
- * 
- * @returns {Promise<string>} The AI assistant's final response text.
+ * @param {Array<{ role: 'user' | 'ai', content: string }>} messages - Past chat messages from database.
+ * @param {Function} onChunk - Callback function that receives each word/token as it arrives.
+ * @returns {Promise<string>} The complete assembled response text.
  */
-const generateResponse = async (messages) => {
+const generateResponse = async (messages, onChunk) => {
+  // Step 1: Format messages array for LangChain
   const formattedMessages = messages.map((msg) => {
     if (msg.role === "user") {
       return new HumanMessage(msg.content);
@@ -113,12 +104,30 @@ const generateResponse = async (messages) => {
     }
   });
 
-  const response = await agent.invoke({
-    messages: formattedMessages
-  });
+  // Step 2: Open an event stream with the agent
+  const eventStream = await agent.streamEvents(
+    { messages: formattedMessages },
+    { version: "v2" }
+  );
 
-  const lastMessage = response.messages[response.messages.length - 1];
-  return lastMessage?.content || "";
+  let fullResponse = "";
+
+  // Step 3: Loop through events as they arrive over the internet
+  for await (const event of eventStream) {
+    // Check if the event is the AI model producing a text chunk
+    if (event.event === "on_chat_model_stream" && event.data?.chunk?.content) {
+      const textChunk = event.data.chunk.content;
+      fullResponse += textChunk;
+      
+      // Send this single piece of text to the socket callback
+      if (typeof onChunk === "function") {
+        onChunk(textChunk);
+      }
+    }
+  }
+
+  // Step 4: Return full text once streaming is complete
+  return fullResponse;
 };
 
 /**
