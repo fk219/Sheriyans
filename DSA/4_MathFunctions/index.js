@@ -86,3 +86,4 @@ console.log("Math.sign(10):", Math.sign(10));   // 1
 // 14. Math.hypot()
 // Returns the length of the hypotenuse using numbers as sides.
 console.log("Math.hypot(3, 4):", Math.hypot(3, 4)); // 5
+
