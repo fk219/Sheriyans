@@ -89,5 +89,12 @@ if (typeof (a) === 'string') {
 }
 
 
+// TYPE
+//  Used to create custom type
 
+type User = {
+    name: string
+    age: number
+    isMale: boolean
+}
 
