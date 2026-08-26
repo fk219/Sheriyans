@@ -1,0 +1,6 @@
+<!-- Basic Types -->
+-Primitive Type (Number, String, Boolean)
+-Arrays
+-Tuples
+-Enums
+-Any, Unknown, Void, Null, Undefined, Never
