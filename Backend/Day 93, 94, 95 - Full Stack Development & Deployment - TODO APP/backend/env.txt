@@ -1,0 +1,1 @@
+MONGO_URI="mongodb+srv://furqank219_db_user:bQ6c0vlGuYR5CWbt@cluster0.am1btqe.mongodb.net/day_92"
