@@ -46,4 +46,21 @@
 // Aisa array jiska size, aur konsa type ka element kis location me likha jaega us array ko tuple kehte hai
 // let arr: [string, number] = ['furqan', 219]
 
-// --------------------Enums 
+
+// --------------------Enums (Enumerations)
+// Similar to Objects with special powers
+// Properties equal "=" se define hoti hai nahi colon se (object ki tarah) 
+// Enumeratio predefined rules set krne ka kaam ata hai
+// JS me enum ka function banta ha
+
+// enum UserRoles{
+//     ADMIN = "admin",
+//     GUEST = "guest",
+//     SUPER_ADMIN = "super_admin"
+// }
+
+// // Later values can be picker up easily
+// UserRoles.SUPER_ADMIN
+
+
+// --------------------
