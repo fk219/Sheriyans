@@ -1,7 +1,7 @@
 // Primitives & Reference
 
 
-// ------------------- REFERENCE
+// ------------------- REFERENCE -----------------
 // [] {} ()
 // Jo datatype me brackets lage wo reference data type hai 
 // Inme koi bhi changes hogi to parent me reflect hoga
@@ -18,26 +18,32 @@
 // Primitive ko app directly copy kr skte ho a=b pr reference ko direct copy nhi krskte
 
 
-// ----------------- PRIMITIVE
+// ----------------- PRIMITIVE -----------------
 // STRINGS, NUMBERS, BOOLEAN are primitive datatypes
 
-// Defining Variable:
+// ---------------- Defining Variable:
 // var (dont use)
 // let
 // const
 
-// Number:
+// -----------------Number:
 // let a = 12
 
-// String
+// ----------------- String
 // let a = 'coding'
 
 // Boolean
 // let a = true
 
 
-// --------------------ARRAYS
+// -------------------- ARRAYS
 // let arr = [1,2,3]
 
 
-// 
+// -------------------- TUPLES
+// Tuples controlled array hota hai.
+// Yaha pr pehle se hi hum define krte hai kitne elements honge aur unki type kya hogi array mai 
+// Aisa array jiska size, aur konsa type ka element kis location me likha jaega us array ko tuple kehte hai
+// let arr: [string, number] = ['furqan', 219]
+
+// --------------------Enums 
