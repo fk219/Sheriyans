@@ -68,16 +68,14 @@
 // let a: string | null
 
 // INtersection '&'
+// type User = {
+//     email: string,
+//     name: string
+// }
 
-type User = {
-    email: string,
-    name: string
-}
-
-type Admin = User & {
-    getDetails(user: string): void
-}
-
+// type Admin = User & {
+//     getDetails(user: string): void
+// }
 
 // Diff between type and interface
 //  In types below example will throw an error, interface me merge kr rha tha 
