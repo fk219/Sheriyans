@@ -3,4 +3,4 @@
 -Using Interfaces to Define Object Shapes
 -Extending Interfaces
 -Type Aliases
--Intersection Types
+-Intersection Types/ Union Types
