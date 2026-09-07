@@ -2,6 +2,7 @@
 .env
 .env.local
 .env.*.local
+/Backend/AI Battle Arena/backend/env.txt
 
 # Dependencies
 node_modules/
