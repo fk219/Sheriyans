@@ -4,6 +4,7 @@
 .env.*.local
 /Backend/AI Battle Arena/backend/env.txt
 /Backend/Day 137 - Langraph/backend/env.txt
+/Backend/Day 137 - Langraph/env.txt
 
 # Dependencies
 node_modules/
