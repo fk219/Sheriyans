@@ -60,8 +60,8 @@ const solutionNode: GraphNode<typeof State> = async (state: typeof State.State) 
 
     // This message is appended to the existing messages.
     return {
-        solution_1: geminiModel_solution.text,
-        solution_2: cohere_solution.text
+        solution_1: (geminiModel_solution as any).content.toString(),
+        solution_2: (cohere_solution as any).content.toString()
     };
 };
 
@@ -105,7 +105,7 @@ const graph = new StateGraph(State)
 
 // This function starts the graph with the user's message.
 export default async function useGraph(userMessage: string) {
-    const result = await graph.invoke({
+    const result = await (graph as any).invoke({
         messages: [new HumanMessage(userMessage)]
     });
 
