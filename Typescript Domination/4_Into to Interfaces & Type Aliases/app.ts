@@ -50,7 +50,7 @@
 // ----------------------------- TYPE ALIASES ----------------------------
 // Types ka kaam hai User defined type banana
 // Apne man chahe naam ka type bana sakte ho
-// Khudke ka type banake ghoshit kr skte ho
+// Khud ka type banake ghoshit kr skte ho
 
 // Example
 // type sankhya = number;
