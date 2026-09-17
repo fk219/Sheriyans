@@ -1,3 +1,31 @@
+@import "tailwindcss";
+
+@theme {
+  --font-mono: ui-monospace, "JetBrains Mono", "Fira Code", Menlo, monospace;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  @apply bg-zinc-950 text-zinc-200 antialiased;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-zinc-700 rounded-full;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
 .counter {
   font-size: 16px;
   padding: 5px 10px;
