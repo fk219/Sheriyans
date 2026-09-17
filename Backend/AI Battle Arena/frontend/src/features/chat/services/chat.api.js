@@ -1,13 +1,17 @@
-export const sendToArena = async (problem) => {
-  const res = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:3000"}/api/arena`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ problem }),
+import axios from "axios"
+
+const api = axios.create({
+  baseURL: "https://ai-battle-arena-4jxh.onrender.com",
+  withCredentials: true,
+})
+
+const sendMessage = ({ input }) => {
+  // backend expects { problem } in the body
+  const response = api.post('/api/arena', {
+    problem: input
   })
 
-  if (!res.ok) {
-    throw new Error("Battle failed. Please try again.")
-  }
-
-  return res.json()
+  return response.data
 }
+
+export { sendMessage }
