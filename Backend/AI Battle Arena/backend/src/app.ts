@@ -22,7 +22,13 @@ app.get('/', (_req, res) => {
 
 app.post('/api/invoke', async (req, res) => {
     try {
-        const {problem} = req.body
+        const { problem } = req.body
+
+        if (!problem || typeof problem !== 'string') {
+            return res.status(400).json({
+                error: "problem must be a non-empty string"
+            })
+        }
 
         const result = await startGraph(problem)
 
@@ -33,7 +39,9 @@ app.post('/api/invoke', async (req, res) => {
         })
     } catch (error: any) {
         console.error("Arena error:", error)
-        res.status(500).json({ error: "Something went wrong in the arena" })
+        res.status(500).json({
+            error: error?.message || String(error) || "Something went wrong in the arena"
+        })
     }
 })
 

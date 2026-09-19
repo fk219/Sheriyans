@@ -1,15 +1,15 @@
 import { useState } from "react"
-import axios from "axios"
+import startBattle from "../services/chat.api"
 
 
 const ChatPage = () => {
   // ----- 1. STATE ------------------------------------------------
   // All state lives here at the top. Nothing is duplicated in children.
 
-  const [chats] = useState([])          // list shown in the sidebar
+  const [chats, setChats] = useState([])
   const [activeChatId, setActiveChatId] = useState(null)
-  const [inputValue, setInputValue] = useState("")        // <- bound to the textarea
-  const [loading] = useState(false)           // true while waiting for the API
+  const [inputValue, setInputValue] = useState("")
+  const [loading, setLoading] = useState(false)
 
   const activeChat = chats.find((chat) => chat.id === activeChatId) ?? null
 
@@ -20,13 +20,31 @@ const ChatPage = () => {
 
   const handleSend = async () => {
     const problem = inputValue.trim()
+    if (!problem || loading) return
 
-    const response = await axios.post("https://ai-battle-arena-4jxh.onrender.com/api/invoke", {
-      problem
-    })
-    
-    const data = response.data
-    console.log(data)
+    try {
+      setLoading(true)
+      const data = await startBattle(problem)
+      const chatId = Date.now().toString()
+
+      setChats((currentChats) => [
+        ...currentChats,
+        {
+          id: chatId,
+          title: problem,
+          messages: [
+            { id: `${chatId}-question`, role: "user", content: problem },
+            { id: `${chatId}-result`, result: data.result }
+          ]
+        }
+      ])
+      setActiveChatId(chatId)
+      setInputValue("")
+    } catch (error) {
+      console.error("Battle request failed:", error)
+    } finally {
+      setLoading(false)
+    }
   }
 
 
