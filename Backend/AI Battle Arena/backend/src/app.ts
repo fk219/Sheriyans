@@ -6,7 +6,11 @@ const app = express()
 
 app.use(express.json())
 app.use(cors({
-    origin: ["http://localhost:5172", "https://scaling-waddle-q5v7p6gvxj73wrx-5173.app.github.dev/"],
+    origin: [
+        "http://localhost:5172",
+        "http://localhost:5173",
+        "https://scaling-waddle-q5v7p6gvxj73wrx-5173.app.github.dev"
+    ],
     methods: ["GET", "POST"],
     credentials: true
 }))

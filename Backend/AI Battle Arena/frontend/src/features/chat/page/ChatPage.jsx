@@ -19,10 +19,10 @@ const ChatPage = () => {
   const startNewChat = () => setActiveChatId(null)
 
   const handleSend = async () => {
-    const question = inputValue.trim()
+    const problem = inputValue.trim()
 
     const response = await axios.post("https://ai-battle-arena-4jxh.onrender.com/api/invoke", {
-      input: question
+      problem
     })
     
     const data = response.data
