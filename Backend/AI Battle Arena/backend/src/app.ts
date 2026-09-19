@@ -18,9 +18,9 @@ app.get('/', (_req, res) => {
 
 app.post('/api/invoke', async (req, res) => {
     try {
-        const {input} = req.body
+        const {problem} = req.body
 
-        const result = await startGraph(input)
+        const result = await startGraph(problem)
 
         res.status(200).json({
             message: "Graph Executed Successfully!",
