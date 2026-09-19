@@ -16,21 +16,16 @@ app.get('/', (_req, res) => {
     res.send('API is up and running')
 })
 
-app.post('/api/arena', async (req, res) => {
+app.post('/api/invoke', async (req, res) => {
     try {
-        const {input} = req.body?.problem
-
-        if (!input || typeof input !== "string") {
-            res.status(400).json({ error: "input is required in the request body" })
-            return
-        }
+        const {input} = req.body
 
         const result = await startGraph(input)
 
         res.status(200).json({
             message: "Graph Executed Successfully!",
             success: true,
-            data: result
+            result
         })
     } catch (error: any) {
         console.error("Arena error:", error)

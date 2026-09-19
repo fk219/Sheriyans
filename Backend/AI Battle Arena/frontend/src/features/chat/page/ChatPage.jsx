@@ -1,60 +1,15 @@
 import { useState } from "react"
+import axios from "axios"
 
-const mockChats = [
-  {
-    id: "chat-1",
-    title: "Fetch data in React",
-    messages: [
-      { id: "msg-1-1", role: "user", content: "Give me a clean and readable function to do this" },
-      {
-        id: "msg-1-2",
-        role: "battle",
-        result: {
-          solution_1: "```javascript\nasync function fetchUserData(userId) {\n  const response = await fetch(`/users/${userId}`)\n  return response.json()\n}\n```",
-          solution_2: "```javascript\nconst fetchUserData = (userId) =>\n  fetch(`/users/${userId}`).then((response) => response.json())\n```",
-          judge: {
-            solution_1_score: 9,
-            solution_2_score: 8,
-            solution_1_feedback: "Clear and easy to read.",
-            solution_2_feedback: "Short, but less explicit about errors.",
-            winner: "solution_2",
-          },
-        },
-      },
-    ],
-  },
-  {
-    id: "chat-2",
-    title: "Is 17 a prime number?",
-    messages: [{ id: "msg-2-1", role: "user", content: "Is 17 a prime number?" }],
-  },
-  {
-    id: "chat-3",
-    title: "Two-sum problem",
-    messages: [{ id: "msg-3-1", role: "user", content: "Solve the two-sum problem efficiently" }],
-  },
-]
-
-const sendBattleRequest = async ({ input }) => {
-  await new Promise((resolve) => setTimeout(resolve, 1200)) // fake network delay
-
-  // pick a random existing mock result just so the UI has something to show
-  const sample = mockChats
-    .flatMap((chat) => chat.messages)
-    .find((msg) => msg.role === "battle" && msg.result)
-
-  if (!sample) throw new Error("No mock result available")
-  return { ...sample.result, problem: input }
-}
 
 const ChatPage = () => {
   // ----- 1. STATE ------------------------------------------------
   // All state lives here at the top. Nothing is duplicated in children.
 
-  const [chats, setChats] = useState(mockChats)          // list shown in the sidebar
-  const [activeChatId, setActiveChatId] = useState(mockChats[0]?.id ?? null)
+  const [chats] = useState([])          // list shown in the sidebar
+  const [activeChatId, setActiveChatId] = useState(null)
   const [inputValue, setInputValue] = useState("")        // <- bound to the textarea
-  const [loading, setLoading] = useState(false)           // true while waiting for the API
+  const [loading] = useState(false)           // true while waiting for the API
 
   const activeChat = chats.find((chat) => chat.id === activeChatId) ?? null
 
@@ -65,71 +20,15 @@ const ChatPage = () => {
 
   const handleSend = async () => {
     const question = inputValue.trim()
-    if (!question || loading) return
 
-    const chatId = activeChatId ?? crypto.randomUUID()
-
-    const userMessage = { id: crypto.randomUUID(), role: "user", content: question }
-    const battleMessage = { id: crypto.randomUUID(), role: "battle", result: null, error: null }
-
-    // If this is a brand-new chat, create it in the sidebar first.
-    if (!activeChatId) {
-      setChats((prev) => [{ id: chatId, title: question, messages: [] }, ...prev])
-      setActiveChatId(chatId)
-    }
-
-    // Add the user's message + a "loading" placeholder for the battle result.
-    setChats((prev) =>
-      prev.map((chat) =>
-        chat.id === chatId
-          ? { ...chat, messages: [...chat.messages, userMessage, battleMessage] }
-          : chat
-      )
-    )
-
-    setInputValue("") // clear the textarea (this is the "UI -> state -> UI" loop in action)
-    setLoading(true)
-
-    try {
-      const result = await sendBattleRequest({ input: question })
-
-      setChats((prev) =>
-        prev.map((chat) =>
-          chat.id === chatId
-            ? {
-                ...chat,
-                messages: chat.messages.map((msg) =>
-                  msg.id === battleMessage.id ? { ...msg, result } : msg
-                ),
-              }
-            : chat
-        )
-      )
-    } catch (error) {
-      setChats((prev) =>
-        prev.map((chat) =>
-          chat.id === chatId
-            ? {
-                ...chat,
-                messages: chat.messages.map((msg) =>
-                  msg.id === battleMessage.id ? { ...msg, error: error.message } : msg
-                ),
-              }
-            : chat
-        )
-      )
-    } finally {
-      setLoading(false)
-    }
+    const response = await axios.post("https://ai-battle-arena-4jxh.onrender.com/api/invoke", {
+      input: question
+    })
+    
+    const data = response.data
+    console.log(data)
   }
 
-  const handleKeyDown = (e) => {
-    // Enter sends, Shift+Enter makes a new line — standard chat-app behavior.
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault()
-      handleSend()
-    }
-  }
 
   // ----- 3. RENDER ---------------------------------------------------
 
@@ -303,7 +202,6 @@ const ChatPage = () => {
             <textarea
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
-              onKeyDown={handleKeyDown}
               rows={1}
               placeholder="Type a problem to start the battle..."
               className="max-h-32 min-w-0 flex-1 resize-none bg-transparent px-3 py-2 text-sm leading-6 text-zinc-100 placeholder-zinc-600 outline-none"

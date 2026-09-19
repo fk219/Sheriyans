@@ -28,21 +28,38 @@ const sendMessages = async (req, res) => {
             role: "user"
         })
 
-        // ===================================================================
-        // STREAM MODE (used by the Socket.IO live-typing flow)
-        // ===================================================================
-        // The frontend sends `stream: true` so we DON'T wait for the full AI
-        // answer here. We just return the real chatId instantly; the AI answer
-        // is then streamed token-by-token through the WebSocket "ask_ai" event.
-        // This avoids the "stuck waiting / long REST timer" bug.
         if (stream) {
-            return res.status(201).json({
-                title: title,
-                newChat: newChat,
-                userMessage: userMessage,
-                chatId: currentChatId,
-                stream: true
+            res.status(200)
+            res.setHeader('Content-Type', 'text/event-stream')
+            res.setHeader('Cache-Control', 'no-cache')
+            res.setHeader('Connection', 'keep-alive')
+            res.flushHeaders()
+
+            const sendEvent = (data) => {
+                res.write(`data: ${JSON.stringify(data)}\n\n`)
+            }
+
+            sendEvent({
+                type: 'start',
+                title,
+                newChat,
+                userMessage,
+                chatId: currentChatId
             })
+
+            const chatMessages = await messageModel.find({chat: currentChatId}).sort({createdAt: 1})
+            const result = await generateResponse(chatMessages, (chunk) => {
+                sendEvent({ type: 'chunk', chatId: currentChatId, chunk })
+            })
+
+            const aiMessage = await messageModel.create({
+                chat: currentChatId,
+                content: result,
+                role: "ai"
+            })
+
+            sendEvent({ type: 'done', message: aiMessage })
+            return res.end()
         }
 
         // ===================================================================
@@ -66,6 +83,10 @@ const sendMessages = async (req, res) => {
         })
 
     }catch(error){
+        if (res.headersSent) {
+            res.write(`data: ${JSON.stringify({type: 'error', error: error.message})}\n\n`)
+            return res.end()
+        }
         res.status(500).json({error: error.message})
     }
 }

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useMemo } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { 
   Plus, 
@@ -17,58 +17,6 @@ import ReactMarkdown from "react-markdown";
 import useChat from "../hook/useChat";
 import { setCurrentChatId } from "../chat.slice";
 
-/**
- * ============================================================================
- * ARCHITECTURE LAYER 4: VIEW / UI COMPONENT LAYER (Dashboard.jsx)
- * ============================================================================
- * 
- * 1. WHAT IS THIS COMPONENT?
- *    - The main visual user interface (UI) for the Perplexity-style AI application.
- *    - Renders the sidebar (previous chats library), the hero screen (landing page),
- *      the live conversation stream (User bubble + AI Markdown response), and input controls.
- * 
- * 2. WHERE DOES DATA COME FROM & WHERE IS IT SHOWN?
- *    - `useSelector((state) => state.chat.chats)`:
- *        • Comes from: Redux store (populated initially by `handleGetChats()` via backend MongoDB `GET /api/chats`).
- *        • Used in: Left sidebar map to display the list of all user chat sessions.
- *        • Sample data shape:
- *          {
- *            "66a012bc394a8f10": { _id: "66a012bc394a8f10", title: "What is Node.js?", messages: [...] },
- *            "66a099ef412b1234": { _id: "66a099ef412b1234", title: "React State Management", messages: [...] }
- *          }
- * 
- *    - `useSelector((state) => state.chat.currentChatId)`:
- *        • Comes from: Redux store (tracks currently selected chat ID, e.g. "66a012bc394a8f10" or null).
- *        • Used in: Header title, active sidebar item highlight, and determining active conversation messages.
- * 
- *    - `activeChat.messages` (Derived from active chat in Redux):
- *        • Comes from: Redux store (populated by `handleOpenChats` or `handleSendMessage`).
- *        • Used in: Conversation stream view to render chat history.
- *        • Sample data shape:
- *          [
- *            { _id: "m1", role: "user", content: "Explain closures" },
- *            { _id: "m2", role: "ai", content: "A closure in JavaScript is..." }
- *          ]
- * 
- *    - `useSelector((state) => state.chat.loading)`:
- *        • Comes from: Redux store.
- *        • Used in: Disabling send button and showing animated loading pulse ("Searching and reasoning...").
- *        • During streaming, `loading` stays `true` until the socket emits `ai_done`/`ai_error`.
- * 
- *    - The LIVE STREAMING message (while AI types):
- *        • Comes from: Redux store via the `ai_typing` socket event (`appendAiChunk`).
- *        • It is a normal message `{ role: "ai", content: "...", streaming: true }`
- *          whose `content` grows chunk by chunk, causing React + ReactMarkdown to
- *          re-render the growing answer in real time — like Perplexity's typing effect.
- * 
- * 3. WHAT HAPPENS ON USER INTERACTIONS?
- *    - Initial Mount: Calls `initializeSocketConnection()` (opens WebSocket) and `handleGetChats()`.
- *    - Click Sidebar Chat: Calls `handleOpenChats(chat._id)` to load message thread via Route Param `/api/chats/:chatId/messages`.
- *    - Submit Question: Calls `handleSendMessage({ message, chatId })` -> optimistic update ->
- *      saves the prompt via REST -> emits "ask_ai" over Socket.IO -> `ai_typing` chunks
- *      stream into Redux -> the AI bubble fills up live -> `ai_done` finalizes it.
- *    - Click "+ New Thread": Dispatches `setCurrentChatId(null)` to show clean Hero landing view.
- */
 const Dashboard = () => {
   // Redux dispatcher to dispatch synchronous actions like setCurrentChatId
   const dispatch = useDispatch();
@@ -77,7 +25,6 @@ const Dashboard = () => {
 
   // Consume controller methods from custom hook layer (useChat)
   const {
-    initializeSocketConnection,
     handleSendMessage,
     handleGetChats,
     handleOpenChats,
@@ -101,20 +48,19 @@ const Dashboard = () => {
   // Find currently active chat object using currentChatId key
   const activeChat = currentChatId ? chats[currentChatId] : null;
   // Get messages array of current active chat with fallback to empty array
-  const messages = activeChat?.messages || [];
+  const messages = useMemo(() => activeChat?.messages || [], [activeChat?.messages]);
 
   /**
    * --------------------------------------------------------------------------
    * 1. INITIAL MOUNT EFFECT
    * --------------------------------------------------------------------------
    * Runs once when Dashboard renders:
-   * - Connects to WebSocket server.
+  * - Loads the user's chat history.
    * - Fetches user's chat history from backend database to populate sidebar.
    */
   useEffect(() => {
-    initializeSocketConnection();
     handleGetChats();
-  }, []);
+  }, [handleGetChats]);
 
   /**
    * --------------------------------------------------------------------------
@@ -395,34 +341,34 @@ const Dashboard = () => {
                           <div className="text-sm text-[#d8d8d4] leading-relaxed">
                             <ReactMarkdown
                               components={{
-                                h1: ({ node, ...props }) => (
+                                h1: ({ ...props }) => (
                                   <h1 className="text-lg font-semibold text-white mt-4 mb-2" {...props} />
                                 ),
-                                h2: ({ node, ...props }) => (
+                                h2: ({ ...props }) => (
                                   <h2 className="text-base font-semibold text-white mt-3 mb-2" {...props} />
                                 ),
-                                h3: ({ node, ...props }) => (
+                                h3: ({ ...props }) => (
                                   <h3 className="text-sm font-semibold text-white mt-2 mb-1" {...props} />
                                 ),
-                                p: ({ node, ...props }) => (
+                                p: ({ ...props }) => (
                                   <p className="leading-relaxed mb-3 text-[#d8d8d4]" {...props} />
                                 ),
-                                ul: ({ node, ...props }) => (
+                                ul: ({ ...props }) => (
                                   <ul className="list-disc pl-5 mb-3 space-y-1" {...props} />
                                 ),
-                                ol: ({ node, ...props }) => (
+                                ol: ({ ...props }) => (
                                   <ol className="list-decimal pl-5 mb-3 space-y-1" {...props} />
                                 ),
-                                li: ({ node, ...props }) => (
+                                li: ({ ...props }) => (
                                   <li className="leading-relaxed" {...props} />
                                 ),
-                                blockquote: ({ node, ...props }) => (
+                                blockquote: ({ ...props }) => (
                                   <blockquote className="border-l-2 border-teal-400/50 pl-3 my-3 italic text-neutral-400" {...props} />
                                 ),
-                                pre: ({ node, ...props }) => (
+                                pre: ({ ...props }) => (
                                   <pre className="bg-[#141515] p-3.5 rounded-xl border border-white/6 overflow-x-auto my-3" {...props} />
                                 ),
-                                code: ({ node, inline, className, children, ...props }) => {
+                                code: ({ inline, children, ...props }) => {
                                   if (inline) {
                                     return (
                                       <code className="bg-white/6 px-1.5 py-0.5 rounded-md text-neutral-200 font-mono text-[12px]" {...props}>
@@ -436,21 +382,21 @@ const Dashboard = () => {
                                     </code>
                                   );
                                 },
-                                a: ({ node, ...props }) => (
+                                a: ({ ...props }) => (
                                   <a className="text-teal-400 hover:underline" target="_blank" rel="noopener noreferrer" {...props} />
                                 ),
-                                table: ({ node, ...props }) => (
+                                table: ({ ...props }) => (
                                   <div className="overflow-x-auto my-3">
                                     <table className="min-w-full divide-y divide-white/10 text-left text-xs border border-white/6 rounded-lg overflow-hidden" {...props} />
                                   </div>
                                 ),
-                                th: ({ node, ...props }) => (
+                                th: ({ ...props }) => (
                                   <th className="px-3 py-2 bg-white/5 font-semibold text-white" {...props} />
                                 ),
-                                td: ({ node, ...props }) => (
+                                td: ({ ...props }) => (
                                   <td className="px-3 py-2 border-t border-white/6 text-neutral-300" {...props} />
                                 ),
-                                hr: ({ node, ...props }) => (
+                                hr: ({ ...props }) => (
                                   <hr className="border-white/10 my-4" {...props} />
                                 ),
                               }}
@@ -492,7 +438,7 @@ const Dashboard = () => {
             BOTTOM INPUT BAR (Visible during ongoing conversation)
             ===================================================================== */}
         {messages.length > 0 && (
-          <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6 bg-gradient-to-t from-[#191a1a] via-[#191a1a]/95 to-transparent pointer-events-none">
+          <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6 bg-linear-to-t from-[#191a1a] via-[#191a1a]/95 to-transparent pointer-events-none">
             <div className="max-w-2xl mx-auto pointer-events-auto">
               <form
                 onSubmit={(e) => {

@@ -5,12 +5,6 @@ import jwt from 'jsonwebtoken'
 const frontendUrl = process.env.FRONTEND_URL || 'https://scaling-waddle-q5v7p6gvxj73wrx-5173.app.github.dev'
 const backendUrl = process.env.BACKEND_URL || 'https://scaling-waddle-q5v7p6gvxj73wrx-3000.app.github.dev'
 
-/*
-* @desc Register A New User
-* @router POST /api/auth/register
-* @access Public
-* @body {username, email, password} 
-*/
 const registerController = async (req, res, next) => {
     const {username, email, password} = req.body
     const existingUser = await userModel.findOne({
@@ -69,12 +63,6 @@ const registerController = async (req, res, next) => {
     })
 }
 
-/*
-* @desc Login User
-* @route /api/auth/login
-* @access PUBLIC
-* @body {email, password}
-*/
 const loginController = async (req, res, next) => {
     const {email, password} = req.body
 
@@ -129,13 +117,6 @@ const loginController = async (req, res, next) => {
     })
 }
 
-/*
-* @desc Verify User and Return JWT Token
-* @route GET /api/auth/verify-email
-* @access PUBLIC
-* @query Token
-*
-*/
 const verifyEmailController = async (req, res, next) => {
     const { token } = req.query
 
@@ -212,11 +193,6 @@ const verifyEmailController = async (req, res, next) => {
     }
 }
 
-/*
-* @desc Get Current Logged In User Detail
-* @route /api/auth/getme
-* @access PRIVATE
-*/
 const getMeController = async (req, res) => {
     const userId = req.user.id
 
